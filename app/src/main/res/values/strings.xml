@@ -1,5 +1,10 @@
 <resources>
     <string name="app_name">BetaApp</string>
+    <string name="start_learning">Начать обучение</string>
+    <string name="continue_learning">Продолжить обучение</string>
+    <string name="level_locked_title">Уровень недоступен</string>
+    <string name="level_locked_message">Этот уровень пока недоступен. Сначала завершите предыдущие уровни.</string>
+    <string name="ok">OK</string>
     <string name="title_home">Домой</string>
     <string name="title_rating">Рейтинг</string>
     <string name="title_achievements">Достижения</string>

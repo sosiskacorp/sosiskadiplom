@@ -5,7 +5,6 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.sosiso4kawo.betaapp.databinding.ActivityMainBinding
 
@@ -31,7 +30,6 @@ class MainActivity : AppCompatActivity() {
                     R.id.navigation_home, R.id.navigation_rating, R.id.navigation_achievements, R.id.navigation_profile
                 )
             )
-            // Remove setupActionBarWithNavController since we're not using ActionBar
             navView.setupWithNavController(navController)
         }
     }
