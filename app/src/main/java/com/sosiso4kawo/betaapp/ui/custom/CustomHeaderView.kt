@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
+import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import com.sosiso4kawo.betaapp.R
@@ -20,15 +21,20 @@ class CustomHeaderView @JvmOverloads constructor(
 
     init {
         binding = ViewCustomHeaderBinding.inflate(LayoutInflater.from(context), this, true)
+        setLayerType(View.LAYER_TYPE_HARDWARE, null)
         setupNotificationButton()
         // Initially hide progress bar and notification button
         binding.progressBar.visibility = GONE
         binding.notificationButton.visibility = GONE
+        binding.headerContainer.setLayerType(View.LAYER_TYPE_HARDWARE, null)
     }
 
     private fun setupNotificationButton() {
-        binding.notificationButton.setOnClickListener {
-            onNotificationClickListener?.invoke()
+        binding.notificationButton.apply {
+            setLayerType(View.LAYER_TYPE_HARDWARE, null)
+            setOnClickListener {
+                onNotificationClickListener?.invoke()
+            }
         }
     }
 

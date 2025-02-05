@@ -28,11 +28,18 @@ class LevelButtonView @JvmOverloads constructor(
         radius = resources.getDimensionPixelSize(R.dimen.level_button_radius).toFloat()
         cardElevation = resources.getDimensionPixelSize(R.dimen.level_button_elevation).toFloat()
 
-        // Устанавливаем фиксированный размер для кнопки
-        val size = resources.getDimensionPixelSize(R.dimen.level_button_size)
+        // Вычисляем размер кнопки на основе размера экрана
+        val displayMetrics = context.resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+
+        val horizontalMargins = 2 * resources.getDimensionPixelSize(R.dimen.level_button_margin)
+        val screenPadding = 2 * (32 * displayMetrics.density).toInt() // 32dp * 2 (левый и правый отступы)
+
+        // Размер кнопки = (ширина экрана - отступы) / 3 (количество колонок)
+        val buttonSize = (screenWidth - screenPadding - horizontalMargins) / 3
         val margin = resources.getDimensionPixelSize(R.dimen.level_button_margin)
 
-        val params = MarginLayoutParams(size, size)
+        val params = MarginLayoutParams(buttonSize, buttonSize)
         params.setMargins(margin, margin, margin, margin)
         layoutParams = params
     }
@@ -62,7 +69,7 @@ class LevelButtonView @JvmOverloads constructor(
             LevelStatus.LOCKED -> {
                 statusIcon.setImageResource(R.drawable.ic_lock)
                 statusIcon.setColorFilter(ContextCompat.getColor(context, android.R.color.darker_gray))
-                isEnabled = false
+                isEnabled = true
                 alpha = 0.5f
             }
         }

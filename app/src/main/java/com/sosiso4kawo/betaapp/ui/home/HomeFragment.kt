@@ -13,12 +13,14 @@ import androidx.lifecycle.ViewModelProvider
 import com.sosiso4kawo.betaapp.R
 import com.sosiso4kawo.betaapp.databinding.FragmentHomeBinding
 import com.sosiso4kawo.betaapp.ui.custom.LevelButtonView
+import android.util.Log
 
 class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
     private lateinit var homeViewModel: HomeViewModel
+    private var levelLockedDialog: AlertDialog? = null
 
     @SuppressLint("ResourceAsColor")
     override fun onCreateView(
@@ -26,67 +28,89 @@ class HomeFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentHomeBinding.inflate(inflater, container, false)
-        val root: View = binding.root
+        return _binding?.root ?: run {
+            _binding = FragmentHomeBinding.inflate(inflater, container, false)
+            setupInitialViews()
+            binding.root
+        }
+    }
 
-        // Set up the header with color but no title
+    private fun setupInitialViews() {
         binding.header.apply {
             setBackgroundColor(R.color.header_home)
-            binding.header.findViewById<ProgressBar>(R.id.progress_bar).visibility = View.VISIBLE
-            binding.header.findViewById<ImageButton>(R.id.notification_button).visibility = View.VISIBLE
-            setOnNotificationClickListener {
-                // Handle notification click
-            }
+            findViewById<ProgressBar>(R.id.progress_bar).visibility = View.VISIBLE
+            findViewById<ImageButton>(R.id.notification_button).visibility = View.VISIBLE
+            setOnNotificationClickListener {}
         }
         
         homeViewModel = ViewModelProvider(this)[HomeViewModel::class.java]
-
-        // Initialize streak circle with a default value
         binding.streakCircle.setStreak(0)
-        
-        // Set up learning button and levels
         setupLearningButton()
         setupLevels()
+        initializeLevelLockedDialog()
         
-        // Observe streak updates from view model
         homeViewModel.text.observe(viewLifecycleOwner) {
             binding.streakCircle.setStreak(it.toString().toIntOrNull() ?: 0)
         }
-        
-        return root
     }
 
     private fun setupLearningButton() {
-        // TODO: Replace with actual progress check
         val hasStartedLearning = false
-        binding.startLearningButton.text = getString(
-            if (hasStartedLearning) R.string.continue_learning
-            else R.string.start_learning
-        )
+        binding.startLearningButton.apply {
+            text = getString(
+                if (hasStartedLearning) R.string.continue_learning
+                else R.string.start_learning
+            )
+            setOnClickListener {
+                Log.d("ButtonClick", "Learning button clicked. Status: ${if (hasStartedLearning) "Continue" else "Start"}")
+            }
+        }
     }
 
     private fun setupLevels() {
-        // TODO: Replace with actual level data
         val totalLevels = 15
-        val completedLevels = 0
+        val completedLevels = 1
+        val recycledButton = LevelButtonView(requireContext())
+
+        binding.levelsGrid.apply {
+            setLayerType(View.LAYER_TYPE_HARDWARE, null)
+            removeAllViews()
+        }
 
         for (i in 1..totalLevels) {
-            val levelButton = LevelButtonView(requireContext()).apply {
+            val levelButton = if (i == 1) recycledButton else LevelButtonView(requireContext()).apply {
+                setLayerType(View.LAYER_TYPE_HARDWARE, null)
+            }
+            levelButton.apply {
                 val status = when {
                     i <= completedLevels -> LevelButtonView.LevelStatus.COMPLETED
                     i == completedLevels + 1 -> LevelButtonView.LevelStatus.AVAILABLE
                     else -> LevelButtonView.LevelStatus.LOCKED
                 }
                 setLevel(i, status)
-                setOnClickListener { handleLevelClick(i, status) }
+                setOnClickListener { view ->
+                    view.isEnabled = false
+                    handleLevelClick(i, status)
+                    view.postDelayed({ view.isEnabled = true }, 300)
+                }
             }
             binding.levelsGrid.addView(levelButton)
         }
     }
 
+    private fun initializeLevelLockedDialog() {
+        levelLockedDialog = AlertDialog.Builder(requireContext())
+            .setTitle(R.string.level_locked_title)
+            .setMessage(R.string.level_locked_message)
+            .setPositiveButton(R.string.ok) { dialog, _ -> dialog.dismiss() }
+            .create()
+    }
+
     private fun handleLevelClick(levelNumber: Int, status: LevelButtonView.LevelStatus) {
         when (status) {
-            LevelButtonView.LevelStatus.LOCKED -> showLevelLockedDialog()
+            LevelButtonView.LevelStatus.LOCKED -> {
+                levelLockedDialog?.show()
+            }
             LevelButtonView.LevelStatus.AVAILABLE,
             LevelButtonView.LevelStatus.COMPLETED -> {
                 // TODO: Navigate to level
@@ -94,16 +118,10 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun showLevelLockedDialog() {
-        AlertDialog.Builder(requireContext())
-            .setTitle(R.string.level_locked_title)
-            .setMessage(R.string.level_locked_message)
-            .setPositiveButton(R.string.ok) { dialog, _ -> dialog.dismiss() }
-            .show()
-    }
-
     override fun onDestroyView() {
         super.onDestroyView()
+        levelLockedDialog?.dismiss()
+        levelLockedDialog = null
         _binding = null
     }
 }

@@ -4,7 +4,6 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
 
     <!-- Level button dimensions -->
-    <dimen name="level_button_size">100dp</dimen>
     <dimen name="level_button_radius">8dp</dimen>
     <dimen name="level_button_elevation">2dp</dimen>
     <dimen name="level_button_margin">8dp</dimen>

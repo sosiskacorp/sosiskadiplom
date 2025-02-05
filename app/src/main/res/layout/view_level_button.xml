@@ -26,7 +26,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center"
+            android:gravity="center_vertical"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
@@ -38,13 +38,17 @@
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:layout_marginEnd="4dp"
+                android:includeFontPadding="false"
+                android:layout_gravity="center_vertical"
                 tools:text="1" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Уровень"
-                android:textSize="12sp" />
+                android:textSize="14sp"
+                android:includeFontPadding="false"
+                android:layout_gravity="center_vertical" />
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
