@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">BetaApp</string>
+    <string name="title_home">Домой</string>
+    <string name="title_rating">Рейтинг</string>
+    <string name="title_achievements">Достижения</string>
+    <string name="title_profile">Профиль</string>
+</resources>
