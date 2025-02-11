@@ -1,0 +1,25 @@
+package com.sosiso4kawo.betaapp.data.model
+
+data class LoginRequest(
+    val login: String,
+    val password: String
+)
+
+data class RegisterRequest(
+    val email: String,
+    val login: String,
+    val password: String
+)
+
+data class RefreshTokenRequest(
+    val refresh_token: String
+)
+
+data class AuthResponse(
+    val access_token: String,
+    val refresh_token: String
+)
+
+data class AuthError(
+    val message: String
+)

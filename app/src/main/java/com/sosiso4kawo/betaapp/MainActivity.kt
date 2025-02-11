@@ -1,6 +1,7 @@
 package com.sosiso4kawo.betaapp
 
 import android.os.Bundle
+import android.view.View
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
@@ -31,6 +32,18 @@ class MainActivity : AppCompatActivity() {
                 )
             )
             navView.setupWithNavController(navController)
+
+            // Hide bottom navigation on auth screens
+            navController.addOnDestinationChangedListener { _, destination, _ ->
+                when (destination.id) {
+                    R.id.navigation_login, R.id.navigation_register -> {
+                        navView.visibility = View.GONE
+                    }
+                    else -> {
+                        navView.visibility = View.VISIBLE
+                    }
+                }
+            }
         }
     }
 }

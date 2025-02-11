@@ -49,6 +49,18 @@ dependencies {
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.gridlayout)
+    
+    // Retrofit for network requests
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+    
+    // Koin for dependency injection
+    implementation(libs.koin.android)
+    implementation(libs.koin.androidx.navigation)
+    
+    // Coroutines for asynchronous programming
+    implementation(libs.kotlinx.coroutines.android)
+    
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
