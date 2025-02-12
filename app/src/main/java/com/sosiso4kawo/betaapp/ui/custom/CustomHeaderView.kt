@@ -1,10 +1,10 @@
 package com.sosiso4kawo.betaapp.ui.custom
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
+import androidx.annotation.ColorRes
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import com.sosiso4kawo.betaapp.R
@@ -16,26 +16,16 @@ class CustomHeaderView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr) {
 
-    private val binding: ViewCustomHeaderBinding
-    private var onNotificationClickListener: (() -> Unit)? = null
+    private val binding: ViewCustomHeaderBinding =
+        ViewCustomHeaderBinding.inflate(LayoutInflater.from(context), this, true)
 
     init {
-        binding = ViewCustomHeaderBinding.inflate(LayoutInflater.from(context), this, true)
+        // Настройка аппаратного ускорения для отрисовки
         setLayerType(View.LAYER_TYPE_HARDWARE, null)
-        setupNotificationButton()
-        // Initially hide progress bar and notification button
+        // Изначально скрываем индикатор прогресса и кнопку уведомлений
         binding.progressBar.visibility = GONE
         binding.notificationButton.visibility = GONE
         binding.headerContainer.setLayerType(View.LAYER_TYPE_HARDWARE, null)
-    }
-
-    private fun setupNotificationButton() {
-        binding.notificationButton.apply {
-            setLayerType(View.LAYER_TYPE_HARDWARE, null)
-            setOnClickListener {
-                onNotificationClickListener?.invoke()
-            }
-        }
     }
 
     fun setTitle(title: String?) {
@@ -47,13 +37,15 @@ class CustomHeaderView @JvmOverloads constructor(
     }
 
     fun setOnNotificationClickListener(listener: () -> Unit) {
-        onNotificationClickListener = listener
+        binding.notificationButton.setOnClickListener {
+            listener.invoke()
+        }
     }
 
-    @SuppressLint("ResourceType")
-    override fun setBackgroundColor(color: Int) {
-        binding.headerContainer.setBackgroundColor(
-            ContextCompat.getColor(context, color)
-        )
+    /**
+     * Устанавливает фон заголовка, используя идентификатор ресурса цвета.
+     */
+    fun setHeaderBackgroundColor(@ColorRes colorResId: Int) {
+        binding.headerContainer.setBackgroundColor(ContextCompat.getColor(context, colorResId))
     }
 }

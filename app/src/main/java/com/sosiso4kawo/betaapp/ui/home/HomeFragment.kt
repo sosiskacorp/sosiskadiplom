@@ -37,7 +37,7 @@ class HomeFragment : Fragment() {
 
     private fun setupInitialViews() {
         binding.header.apply {
-            setBackgroundColor(R.color.header_home)
+            setHeaderBackgroundColor(R.color.header_home)
             findViewById<ProgressBar>(R.id.progress_bar).visibility = View.VISIBLE
             findViewById<ImageButton>(R.id.notification_button).visibility = View.VISIBLE
             setOnNotificationClickListener {}

@@ -19,10 +19,10 @@ class RatingFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentRatingBinding.inflate(inflater, container, false)
-        
+
         // Set up the header with color and title
         binding.header.apply {
-            setBackgroundColor(R.color.header_rating)
+            setHeaderBackgroundColor(R.color.header_rating)
             setTitle("Рейтинг")
         }
         return binding.root

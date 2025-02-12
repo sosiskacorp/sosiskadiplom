@@ -10,14 +10,13 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.textfield.TextInputEditText
-import com.google.android.material.textfield.TextInputLayout
 import com.sosiso4kawo.betaapp.R
 import com.sosiso4kawo.betaapp.databinding.FragmentLoginBinding
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class LoginFragment : Fragment() {
+
     private var _binding: FragmentLoginBinding? = null
     private val binding get() = _binding!!
     private val viewModel: AuthViewModel by viewModel()
@@ -42,7 +41,6 @@ class LoginFragment : Fragment() {
         binding.loginButton.setOnClickListener {
             val login = binding.loginInput.text.toString()
             val password = binding.passwordInput.text.toString()
-
             if (validateInput(login, password)) {
                 viewModel.login(login, password)
             }
@@ -55,21 +53,18 @@ class LoginFragment : Fragment() {
 
     private fun validateInput(login: String, password: String): Boolean {
         var isValid = true
-
         if (login.isBlank()) {
             binding.loginLayout.error = "Введите логин"
             isValid = false
         } else {
             binding.loginLayout.error = null
         }
-
         if (password.isBlank()) {
             binding.passwordLayout.error = "Введите пароль"
             isValid = false
         } else {
             binding.passwordLayout.error = null
         }
-
         return isValid
     }
 

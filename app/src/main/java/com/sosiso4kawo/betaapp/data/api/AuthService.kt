@@ -3,7 +3,10 @@ package com.sosiso4kawo.betaapp.data.api
 import com.sosiso4kawo.betaapp.data.model.*
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.Path
 
 interface AuthService {
     @POST("v1/auth/login")
@@ -16,5 +19,5 @@ interface AuthService {
     suspend fun refreshToken(@Body request: RefreshTokenRequest): Response<AuthResponse>
 
     @POST("v1/auth/logout")
-    suspend fun logout(): Response<Unit>
+    suspend fun logout(@Header("Authorization") token: String): Response<Void>
 }

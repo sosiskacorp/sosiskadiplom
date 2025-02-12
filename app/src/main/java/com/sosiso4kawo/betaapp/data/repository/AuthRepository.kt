@@ -3,10 +3,12 @@ package com.sosiso4kawo.betaapp.data.repository
 import android.util.Log
 import com.sosiso4kawo.betaapp.data.api.AuthService
 import com.sosiso4kawo.betaapp.data.model.*
+import com.sosiso4kawo.betaapp.util.SessionManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
-class AuthRepository(private val authService: AuthService) {
+class AuthRepository(private val authService: AuthService, private val sessionManager: SessionManager) {
+
     suspend fun login(login: String, password: String): Flow<Result<AuthResponse>> = flow {
         try {
             val request = LoginRequest(login, password)
@@ -19,7 +21,10 @@ class AuthRepository(private val authService: AuthService) {
                     val body = response.body()
                     Log.d("AuthRepository", "Login successful, response body: $body")
                     if (body != null) {
+                        // Сохраняем токены в SessionManager
+                        sessionManager.saveTokens(body.access_token, body.refresh_token)
                         emit(Result.success(body))
+                        Log.d("AuthRepository", "Токены сохранены: access_token=${body.access_token}, refresh_token=${body.refresh_token}")
                     } else {
                         Log.e("AuthRepository", "Login successful but body is null")
                         emit(Result.failure(Exception("Успешная авторизация, но сервер вернул пустой ответ")))
@@ -32,7 +37,7 @@ class AuthRepository(private val authService: AuthService) {
                 else -> {
                     val errorBody = response.errorBody()?.string() ?: ""
                     Log.e("AuthRepository", "Login error: code=${response.code()}, error=$errorBody, headers=${response.headers()}")
-                    
+
                     val errorMessage = if (errorBody.isBlank()) {
                         "Ошибка сервера (${response.code()})"
                     } else {
@@ -60,6 +65,7 @@ class AuthRepository(private val authService: AuthService) {
         }
     }
 
+
     suspend fun register(email: String, login: String, password: String): Flow<Result<AuthResponse>> = flow {
         try {
             val request = RegisterRequest(email, login, password)
@@ -74,7 +80,6 @@ class AuthRepository(private val authService: AuthService) {
                     if (body != null) {
                         emit(Result.success(body))
                     } else {
-                        // Handle empty but successful response
                         val errorMessage = if (response.code() == 204) {
                             "Регистрация успешна"
                         } else {
@@ -124,6 +129,7 @@ class AuthRepository(private val authService: AuthService) {
             emit(Result.failure(Exception(errorMessage)))
         }
     }
+
     suspend fun refreshToken(refreshToken: String): Flow<Result<AuthResponse>> = flow {
         try {
             val request = RefreshTokenRequest(refreshToken)
@@ -149,7 +155,7 @@ class AuthRepository(private val authService: AuthService) {
                 else -> {
                     val errorBody = response.errorBody()?.string() ?: ""
                     Log.e("AuthRepository", "Token refresh error: code=${response.code()}, error=$errorBody, headers=${response.headers()}")
-                    
+
                     val errorMessage = if (errorBody.isBlank()) {
                         "Ошибка сервера (${response.code()})"
                     } else {
@@ -180,7 +186,17 @@ class AuthRepository(private val authService: AuthService) {
     suspend fun logout(): Flow<Result<Unit>> = flow {
         try {
             Log.d("AuthRepository", "Initiating logout request")
-            val response = authService.logout()
+
+            // Получаем токен доступа
+            val accessToken = sessionManager.getAccessToken()
+            if (accessToken.isNullOrEmpty()) {
+                Log.w("AuthRepository", "No access token found, skipping server logout")
+                emit(Result.success(Unit)) // Если токена нет, считаем выход успешным
+                return@flow
+            }
+
+            // Выполняем запрос logout с токеном
+            val response = authService.logout("Bearer $accessToken")
             Log.d("AuthRepository", "Logout response: code=${response.code()}, headers=${response.headers()}, raw=${response.raw()}")
 
             when {
@@ -190,12 +206,12 @@ class AuthRepository(private val authService: AuthService) {
                 }
                 response.code() == 401 -> {
                     Log.e("AuthRepository", "Logout unauthorized (401): Invalid or expired token")
-                    emit(Result.success(Unit)) // Still consider it a successful logout
+                    emit(Result.success(Unit)) // Даже если токен недействителен, считаем выход успешным
                 }
                 else -> {
                     val errorBody = response.errorBody()?.string() ?: ""
                     Log.e("AuthRepository", "Logout error: code=${response.code()}, error=$errorBody, headers=${response.headers()}")
-                    
+
                     val errorMessage = if (errorBody.isBlank()) {
                         "Ошибка сервера (${response.code()})"
                     } else {

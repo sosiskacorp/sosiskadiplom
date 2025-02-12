@@ -22,7 +22,7 @@ class AchievementsFragment : Fragment() {
         
         // Set up the header with color and title
         binding.header.apply {
-            setBackgroundColor(R.color.header_achievements)
+            setHeaderBackgroundColor(R.color.header_achievements)
             setTitle("Достижения")
         }
         return binding.root
