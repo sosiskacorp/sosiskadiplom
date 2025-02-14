@@ -39,12 +39,11 @@ class RegisterFragment : Fragment() {
     private fun setupViews() {
         binding.registerButton.setOnClickListener {
             val email = binding.emailInput.text.toString()
-            val login = binding.loginInput.text.toString()
             val password = binding.passwordInput.text.toString()
             val confirmPassword = binding.confirmPasswordInput.text.toString()
 
-            if (validateInput(email, login, password, confirmPassword)) {
-                viewModel.register(email, login, password)
+            if (validateInput(email, password, confirmPassword)) {
+                viewModel.register(email, password)
             }
         }
 
@@ -53,7 +52,7 @@ class RegisterFragment : Fragment() {
         }
     }
 
-    private fun validateInput(email: String, login: String, password: String, confirmPassword: String): Boolean {
+    private fun validateInput(email: String, password: String, confirmPassword: String): Boolean {
         var isValid = true
 
         if (email.isBlank()) {
@@ -64,13 +63,6 @@ class RegisterFragment : Fragment() {
             isValid = false
         } else {
             binding.emailLayout.error = null
-        }
-
-        if (login.isBlank()) {
-            binding.loginLayout.error = "Введите логин"
-            isValid = false
-        } else {
-            binding.loginLayout.error = null
         }
 
         if (password.isBlank()) {

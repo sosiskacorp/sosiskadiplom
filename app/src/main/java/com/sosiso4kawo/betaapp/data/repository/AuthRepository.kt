@@ -21,8 +21,12 @@ class AuthRepository(private val authService: AuthService, private val sessionMa
                     val body = response.body()
                     Log.d("AuthRepository", "Login successful, response body: $body")
                     if (body != null) {
-                        // Сохраняем токены в SessionManager
-                        sessionManager.saveTokens(body.access_token, body.refresh_token)
+                        // Сохраняем токены в SessionManager с expiresIn (если поле отсутствует, используем значение по умолчанию)
+                        sessionManager.saveTokens(
+                            accessToken = body.access_token,
+                            refreshToken = body.refresh_token,
+                            expiresIn = body.expiresIn ?: 3600L
+                        )
                         emit(Result.success(body))
                         Log.d("AuthRepository", "Токены сохранены: access_token=${body.access_token}, refresh_token=${body.refresh_token}")
                     } else {
@@ -66,9 +70,9 @@ class AuthRepository(private val authService: AuthService, private val sessionMa
     }
 
 
-    suspend fun register(email: String, login: String, password: String): Flow<Result<AuthResponse>> = flow {
+    suspend fun register(email: String, password: String): Flow<Result<AuthResponse>> = flow {
         try {
-            val request = RegisterRequest(email, login, password)
+            val request = RegisterRequest(email, password)
             Log.d("AuthRepository", "Registration request payload: ${com.google.gson.GsonBuilder().setPrettyPrinting().create().toJson(request)}")
             val response = authService.register(request)
             Log.d("AuthRepository", "Registration response: code=${response.code()}, headers=${response.headers()}, raw=${response.raw()}")
@@ -238,4 +242,6 @@ class AuthRepository(private val authService: AuthService, private val sessionMa
             emit(Result.failure(Exception(errorMessage)))
         }
     }
+
+
 }

@@ -4,26 +4,38 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- Пользовательский header -->
+    <!-- Header -->
     <com.sosiso4kawo.betaapp.ui.custom.CustomHeaderView
         android:id="@+id/header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Логин пользователя -->
+    <!-- Аватар -->
+    <ImageView
+        android:id="@+id/avatarImageView"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginTop="16dp"
+        android:contentDescription="@string/avatar_description"
+        android:scaleType="centerCrop"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/header" />
+
+    <!-- ФИО пользователя -->
     <TextView
-        android:id="@+id/user_full_name"
+        android:id="@+id/userFullName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:text="Логин: qwertyq"
+        android:layout_marginTop="16dp"
+        android:text="Фамилия Имя Отчество"
         android:textSize="20sp"
         android:textStyle="bold"
         android:textColor="?attr/colorPrimary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/header" />
+        app:layout_constraintTop_toBottomOf="@id/avatarImageView" />
 
     <!-- Кнопка выхода -->
     <com.google.android.material.button.MaterialButton

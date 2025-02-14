@@ -26,10 +26,11 @@ class AuthViewModel(
         viewModelScope.launch {
             val accessToken = sessionManager.getAccessToken()
             if (!accessToken.isNullOrEmpty()) {
-                // Если токен существует, пользователь уже авторизован
-                _uiState.value = AuthUiState.Success(AuthResponse(accessToken, ""))
+                // Если токен существует, пользователь уже авторизован.
+                // Передаём значение по умолчанию для expiresIn, например 3600 секунд.
+                _uiState.value = AuthUiState.Success(AuthResponse(accessToken, "", 60L))
             } else {
-                // Если токена нет, пользователь не авторизован
+                // Если токена нет, пользователь не авторизован.
                 _uiState.value = AuthUiState.LoggedOut
             }
         }
@@ -47,10 +48,10 @@ class AuthViewModel(
         }
     }
 
-    fun register(email: String, login: String, password: String) {
+    fun register(email: String, password: String) {
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
-            repository.register(email, login, password).collect { result ->
+            repository.register(email, password).collect { result ->
                 _uiState.value = result.fold(
                     onSuccess = { AuthUiState.Success(it) },
                     onFailure = { AuthUiState.Error(it.message ?: "Неизвестная ошибка") }
