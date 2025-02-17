@@ -23,10 +23,4 @@ interface AuthService {
 
     @GET("v1/users/me")
     suspend fun getProfile(@Header("Authorization") token: String): Response<User>
-
-    @POST("v1/users/update")
-    suspend fun updateProfile(
-        @Header("Authorization") token: String,
-        @Body request: UpdateProfileRequest
-    ): Response<Void>
 }

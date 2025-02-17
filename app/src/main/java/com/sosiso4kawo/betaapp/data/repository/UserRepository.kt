@@ -1,8 +1,8 @@
 package com.sosiso4kawo.betaapp.data.repository
 
+import UserService
 import android.util.Log
 import com.google.gson.GsonBuilder
-import com.sosiso4kawo.betaapp.data.api.AuthService
 import com.sosiso4kawo.betaapp.data.model.AuthError
 import com.sosiso4kawo.betaapp.data.model.UpdateProfileRequest
 import com.sosiso4kawo.betaapp.data.model.User
@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.flow
 import retrofit2.Response
 
 class UserRepository(
-    private val authService: AuthService,
+    private val userService: UserService,
     private val sessionManager: SessionManager
 ) {
 
@@ -38,7 +38,7 @@ class UserRepository(
             }
 
             // Пытаемся получить данные с сервера
-            val response = authService.getProfile("Bearer $accessToken")
+            val response = userService.getProfile("Bearer $accessToken")
             Log.d(
                 "UserRepository",
                 "Profile response: code=${response.code()}, headers=${response.headers()}, raw=${response.raw()}"
@@ -113,7 +113,7 @@ class UserRepository(
                 return@flow
             }
 
-            val response = authService.updateProfile("Bearer $accessToken", request)
+            val response = userService.updateProfile("Bearer $accessToken", request)
             Log.d(
                 "UserRepository",
                 "Profile update response: code=${response.code()}, headers=${response.headers()}, raw=${response.raw()}"
