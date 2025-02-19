@@ -22,9 +22,10 @@ class CustomHeaderView @JvmOverloads constructor(
     init {
         // Настройка аппаратного ускорения для отрисовки
         setLayerType(View.LAYER_TYPE_HARDWARE, null)
-        // Изначально скрываем индикатор прогресса и кнопку уведомлений
+        // Изначально скрываем все дополнительные элементы
         binding.progressBar.visibility = GONE
         binding.notificationButton.visibility = GONE
+        binding.editProfileButton.visibility = GONE
         binding.headerContainer.setLayerType(View.LAYER_TYPE_HARDWARE, null)
     }
 
@@ -36,8 +37,22 @@ class CustomHeaderView @JvmOverloads constructor(
         binding.progressBar.progress = progress
     }
 
+    fun showNotificationButton(show: Boolean = true) {
+        binding.notificationButton.visibility = if (show) View.VISIBLE else View.GONE
+    }
+
+    fun showEditProfileButton(show: Boolean = true) {
+        binding.editProfileButton.visibility = if (show) View.VISIBLE else View.GONE
+    }
+
     fun setOnNotificationClickListener(listener: () -> Unit) {
         binding.notificationButton.setOnClickListener {
+            listener.invoke()
+        }
+    }
+
+    fun setOnEditProfileClickListener(listener: () -> Unit) {
+        binding.editProfileButton.setOnClickListener {
             listener.invoke()
         }
     }

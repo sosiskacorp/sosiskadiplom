@@ -44,6 +44,10 @@ class ProfileFragment : Fragment(), KoinComponent {
         binding.header.apply {
             setHeaderBackgroundColor(R.color.header_profile)
             setTitle("Профиль")
+            showEditProfileButton(true)
+            setOnEditProfileClickListener {
+                findNavController().navigate(R.id.action_navigation_profile_to_editProfileFragment)
+            }
         }
 
         return binding.root
