@@ -15,7 +15,7 @@ class AuthInterceptor(
 
     override fun intercept(chain: Interceptor.Chain): Response {
         var request = chain.request()
-        val path = request.url().encodedPath()
+        val path = request.url.encodedPath
 
         // Исключаем эндпоинты логина и регистрации
         if (path.contains("v1/auth/login") || path.contains("v1/auth/register")) {
@@ -23,7 +23,7 @@ class AuthInterceptor(
             return chain.proceed(request)
         }
 
-        Log.d("AuthInterceptor", "Начало обработки запроса: ${request.url()}")
+        Log.d("AuthInterceptor", "Начало обработки запроса: ${request.url}")
 
         // Проверяем время истечения токена
         val currentTime = System.currentTimeMillis()
@@ -75,10 +75,10 @@ class AuthInterceptor(
 
         // Выполняем запрос
         var response = chain.proceed(request)
-        Log.d("AuthInterceptor", "Ответ получен: код ${response.code()} (исправлено), url: ${request.url()}")
+        Log.d("AuthInterceptor", "Ответ получен: код ${response.code} (исправлено), url: ${request.url}")
 
         // Если получили 401 и запрос ещё не был повторен, пробуем обновить токен и повторить запрос
-        if (response.code() == 401 && request.header("X-Retry") == null) {
+        if (response.code == 401 && request.header("X-Retry") == null) {
             Log.d("AuthInterceptor", "Получен 401, пытаемся обновить токен и повторить запрос")
             response.close() // Закрываем предыдущий ответ
             runBlocking {
@@ -115,7 +115,7 @@ class AuthInterceptor(
                     .header("X-Retry", "true")
                     .build()
                 response = chain.proceed(request)
-                Log.d("AuthInterceptor", "Повторный запрос выполнен с обновленным токеном, код ответа: ${response.code()}")
+                Log.d("AuthInterceptor", "Повторный запрос выполнен с обновленным токеном, код ответа: ${response.code}")
             }
         }
 

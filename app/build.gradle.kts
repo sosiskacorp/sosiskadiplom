@@ -61,6 +61,8 @@ dependencies {
     // Coroutines for asynchronous programming
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.glide)
+    implementation(libs.okhttp)
+    implementation(libs.ucrop)
     annotationProcessor(libs.compiler)
 
     testImplementation(libs.junit)

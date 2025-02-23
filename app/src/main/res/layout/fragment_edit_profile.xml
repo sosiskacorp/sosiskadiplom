@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+    <!-- Хэдер -->
     <com.sosiso4kawo.betaapp.ui.custom.CustomHeaderView
         android:id="@+id/header"
         android:layout_width="match_parent"
@@ -23,6 +23,18 @@
             android:orientation="vertical"
             android:padding="16dp">
 
+            <!-- Аватар: кликабельный для выбора изображения -->
+            <ImageView
+                android:id="@+id/avatarImageView"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:layout_gravity="center"
+                android:layout_marginBottom="16dp"
+                android:src="@drawable/placeholder_avatar"
+                android:background="@drawable/circular_border"
+                android:scaleType="centerCrop" />
+
+            <!-- Поля ввода -->
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -75,34 +87,7 @@
                     android:inputType="textPersonName" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:hint="URL аватара">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/avatarUrlEditText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="textUri" />
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <Button
-                android:id="@+id/previewAvatarButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:text="Предпросмотр аватара" />
-
-            <ImageView
-                android:id="@+id/avatarPreviewImageView"
-                android:layout_width="120dp"
-                android:layout_height="120dp"
-                android:layout_marginBottom="16dp"
-                android:scaleType="centerCrop"
-                android:src="@drawable/placeholder_avatar" />
-
+            <!-- Кнопка сохранения -->
             <Button
                 android:id="@+id/saveButton"
                 android:layout_width="match_parent"

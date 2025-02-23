@@ -1,6 +1,6 @@
 package com.sosiso4kawo.betaapp.data.repository
 
-import UserService
+import UserService  // убедитесь, что путь правильный
 import android.util.Log
 import com.google.gson.GsonBuilder
 import com.sosiso4kawo.betaapp.data.model.AuthError
@@ -10,6 +10,7 @@ import com.sosiso4kawo.betaapp.util.Result
 import com.sosiso4kawo.betaapp.util.SessionManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import okhttp3.MultipartBody
 import retrofit2.Response
 
 class UserRepository(
@@ -39,10 +40,7 @@ class UserRepository(
 
             // Пытаемся получить данные с сервера
             val response = userService.getProfile("Bearer $accessToken")
-            Log.d(
-                "UserRepository",
-                "Profile response: code=${response.code()}, headers=${response.headers()}, raw=${response.raw()}"
-            )
+            Log.d("UserRepository", "Profile response: code=${response.code()}, headers=${response.headers()}, raw=${response.raw()}")
 
             when {
                 response.isSuccessful -> {
@@ -63,10 +61,7 @@ class UserRepository(
                 }
                 else -> {
                     val errorBody = response.errorBody()?.string() ?: ""
-                    Log.e(
-                        "UserRepository",
-                        "Profile fetch error: code=${response.code()}, error=$errorBody, headers=${response.headers()}"
-                    )
+                    Log.e("UserRepository", "Profile fetch error: code=${response.code()}, error=$errorBody, headers=${response.headers()}")
                     val errorMessage = if (errorBody.isBlank()) {
                         "Ошибка сервера (${response.code()})"
                     } else {
@@ -75,10 +70,7 @@ class UserRepository(
                             val error = gson.fromJson(errorBody, AuthError::class.java)
                             error?.message ?: "Ошибка при получении профиля"
                         } catch (e: Exception) {
-                            Log.e(
-                                "UserRepository",
-                                "Error parsing response: ${e.message}, raw error body: $errorBody"
-                            )
+                            Log.e("UserRepository", "Error parsing response: ${e.message}, raw error body: $errorBody")
                             "Ошибка при обработке ответа сервера"
                         }
                     }
@@ -86,10 +78,7 @@ class UserRepository(
                 }
             }
         } catch (e: Exception) {
-            Log.e(
-                "UserRepository",
-                "Profile fetch exception: ${e.message}, cause: ${e.cause}, stack trace: ${e.stackTrace.joinToString("\n")}"
-            )
+            Log.e("UserRepository", "Profile fetch exception: ${e.message}, cause: ${e.cause}, stack trace: ${e.stackTrace.joinToString("\n")}")
             val errorMessage = when (e) {
                 is java.net.UnknownHostException -> "Нет подключения к интернету"
                 is java.net.SocketTimeoutException -> "Превышено время ожидания ответа от сервера"
@@ -114,15 +103,12 @@ class UserRepository(
             }
 
             val response = userService.updateProfile("Bearer $accessToken", request)
-            Log.d(
-                "UserRepository",
-                "Profile update response: code=${response.code()}, headers=${response.headers()}, raw=${response.raw()}"
-            )
+            Log.d("UserRepository", "Profile update response: code=${response.code()}, headers=${response.headers()}, raw=${response.raw()}")
 
             when {
                 response.isSuccessful -> {
                     Log.d("UserRepository", "Profile updated successfully")
-                    emit(Result.Success(Unit)) // Используем Result.Success
+                    emit(Result.Success(Unit))
                 }
                 response.code() == 401 -> {
                     Log.e("UserRepository", "Unauthorized access (401): Invalid or expired token")
@@ -130,10 +116,7 @@ class UserRepository(
                 }
                 else -> {
                     val errorBody = response.errorBody()?.string() ?: ""
-                    Log.e(
-                        "UserRepository",
-                        "Profile update error: code=${response.code()}, error=$errorBody, headers=${response.headers()}"
-                    )
+                    Log.e("UserRepository", "Profile update error: code=${response.code()}, error=$errorBody, headers=${response.headers()}")
                     val errorMessage = if (errorBody.isBlank()) {
                         "Ошибка сервера (${response.code()})"
                     } else {
@@ -142,10 +125,7 @@ class UserRepository(
                             val error = gson.fromJson(errorBody, AuthError::class.java)
                             error?.message ?: "Ошибка при обновлении профиля"
                         } catch (e: Exception) {
-                            Log.e(
-                                "UserRepository",
-                                "Error parsing response: ${e.message}, raw error body: $errorBody"
-                            )
+                            Log.e("UserRepository", "Error parsing response: ${e.message}, raw error body: $errorBody")
                             "Ошибка при обработке ответа сервера"
                         }
                     }
@@ -153,10 +133,7 @@ class UserRepository(
                 }
             }
         } catch (e: Exception) {
-            Log.e(
-                "UserRepository",
-                "Profile update exception: ${e.message}, cause: ${e.cause}, stack trace: ${e.stackTrace.joinToString("\n")}"
-            )
+            Log.e("UserRepository", "Profile update exception: ${e.message}, cause: ${e.cause}, stack trace: ${e.stackTrace.joinToString("\n")}")
             val errorMessage = when (e) {
                 is java.net.UnknownHostException -> "Нет подключения к интернету"
                 is java.net.SocketTimeoutException -> "Превышено время ожидания ответа от сервера"
@@ -165,5 +142,12 @@ class UserRepository(
             }
             emit(Result.Failure(Exception(errorMessage)))
         }
+    }
+
+    /**
+     * Загружает аватар пользователя.
+     */
+    suspend fun uploadAvatar(token: String, file: MultipartBody.Part): Response<Void> {
+        return userService.uploadAvatar(token, file)
     }
 }
