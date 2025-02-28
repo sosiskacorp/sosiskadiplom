@@ -10,4 +10,5 @@
     <string name="title_achievements">Достижения</string>
     <string name="title_profile">Профиль</string>
     <string name="avatar_description">Аватар пользователя</string>
+    <string name="avatar">Avatar</string>
 </resources>

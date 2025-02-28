@@ -150,4 +150,44 @@ class UserRepository(
     suspend fun uploadAvatar(token: String, file: MultipartBody.Part): Response<Void> {
         return userService.uploadAvatar(token, file)
     }
+
+    suspend fun getAllUsers(limit: Int, offset: Int) = kotlinx.coroutines.flow.flow {
+        try {
+            val token = sessionManager.getAccessToken()
+            if (token.isNullOrEmpty()) {
+                emit(com.sosiso4kawo.betaapp.util.Result.Failure(Exception("Токен доступа отсутствует")))
+                return@flow
+            }
+            val response = userService.getAllUsers(limit, offset)
+            if (response.isSuccessful) {
+                // Извлекаем пользователей из поля users
+                val users = response.body()?.users ?: emptyList()
+                emit(com.sosiso4kawo.betaapp.util.Result.Success(users))
+            } else {
+                emit(com.sosiso4kawo.betaapp.util.Result.Failure(Exception("Ошибка сервера: ${response.code()}")))
+            }
+        } catch (e: Exception) {
+            emit(com.sosiso4kawo.betaapp.util.Result.Failure(e))
+        }
+    }
+
+    suspend fun getUserByUuid(uuid: String) = flow {
+        try {
+            val token = sessionManager.getAccessToken()
+            if (token.isNullOrEmpty()) {
+                emit(Result.Failure(Exception("Токен доступа отсутствует")))
+                return@flow
+            }
+            val response = userService.getUserByUuid(uuid, "Bearer $token")
+            if (response.isSuccessful) {
+                response.body()?.let { emit(Result.Success(it)) }
+                    ?: emit(Result.Failure(Exception("Пустой ответ сервера")))
+            } else {
+                emit(Result.Failure(Exception("Ошибка сервера: ${response.code()}")))
+            }
+        } catch (e: Exception) {
+            emit(Result.Failure(e))
+        }
+    }
+
 }

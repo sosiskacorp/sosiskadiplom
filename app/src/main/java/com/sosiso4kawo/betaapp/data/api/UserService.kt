@@ -1,5 +1,6 @@
 import com.sosiso4kawo.betaapp.data.model.UpdateProfileRequest
 import com.sosiso4kawo.betaapp.data.model.User
+import com.sosiso4kawo.betaapp.data.model.UsersResponse
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
@@ -9,6 +10,8 @@ import retrofit2.http.Multipart
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Part
+import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface UserService {
     @GET("v1/users/me")
@@ -26,4 +29,18 @@ interface UserService {
         @Header("Authorization") token: String,
         @Part file: MultipartBody.Part
     ): Response<Void>
+
+    @GET("v1/users/all")
+    suspend fun getAllUsers(
+        @Query("limit") limit: Int,
+        @Query("offset") offset: Int
+    ): Response<UsersResponse>
+
+    @GET("v1/users/{uuid}")
+    suspend fun getUserByUuid(
+        @Path("uuid") uuid: String,
+        @Header("Authorization") token: String
+    ): Response<User>
+
+
 }

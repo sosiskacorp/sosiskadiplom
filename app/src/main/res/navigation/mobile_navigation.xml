@@ -43,7 +43,11 @@
         android:id="@+id/navigation_rating"
         android:name="com.sosiso4kawo.betaapp.ui.rating.RatingFragment"
         android:label="@string/title_rating"
-        tools:layout="@layout/fragment_rating" />
+        tools:layout="@layout/fragment_rating">
+        <action
+            android:id="@+id/action_ratingFragment_to_userDetailsFragment"
+            app:destination="@+id/userDetailsFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_achievements"
@@ -66,4 +70,11 @@
         android:name="com.sosiso4kawo.betaapp.ui.profile.EditProfileFragment"
         android:label="Edit Profile"
         tools:layout="@layout/fragment_edit_profile" />
+
+    <!-- Новый фрагмент для просмотра деталей пользователя -->
+    <fragment
+        android:id="@+id/userDetailsFragment"
+        android:name="com.sosiso4kawo.betaapp.ui.userdetails.UserDetailsFragment"
+        android:label="User Details"
+        tools:layout="@layout/fragment_user_details" />
 </navigation>

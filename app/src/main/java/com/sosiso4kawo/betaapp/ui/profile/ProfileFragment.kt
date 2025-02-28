@@ -97,8 +97,13 @@ class ProfileFragment : Fragment(), KoinComponent {
                             val user = result.value
                             binding.userFullName.text = "${user.last_name} ${user.name} ${user.second_name}"
                             if (!user.avatar.isNullOrEmpty()) {
+                                binding.avatarImageView.apply {
+                                    // Устанавливаем фон-бордер (предварительно создайте drawable circular_border.xml)
+                                    setBackgroundResource(R.drawable.circular_border)
+                                }
                                 Glide.with(this@ProfileFragment)
                                     .load(user.avatar)
+                                    .circleCrop()
                                     .placeholder(R.drawable.placeholder_avatar)
                                     .error(R.drawable.error_avatar)
                                     .into(binding.avatarImageView)
