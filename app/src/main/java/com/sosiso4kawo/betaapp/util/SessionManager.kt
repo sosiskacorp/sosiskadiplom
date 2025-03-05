@@ -44,6 +44,10 @@ class SessionManager(context: Context) {
         }
     }
 
+    fun getUserUuid(): String? {
+        return getUserData()?.uuid
+    }
+
     fun clearSession() {
         prefs.edit().clear().apply()
     }

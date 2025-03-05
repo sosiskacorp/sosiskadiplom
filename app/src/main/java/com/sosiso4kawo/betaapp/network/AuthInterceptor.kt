@@ -39,7 +39,7 @@ class AuthInterceptor(
                     val authRepository: AuthRepository = get()
                     authRepository.refreshToken(refreshToken).collect { result ->
                         result.onSuccess { authResponse ->
-                            val expiresIn = authResponse.expiresIn ?: 60L
+                            val expiresIn = authResponse.expiresIn ?: 1000L
                             Log.d(
                                 "AuthInterceptor",
                                 "Токен обновлён успешно. Новый access_token: ${authResponse.access_token}, expiresIn: $expiresIn"
@@ -87,7 +87,7 @@ class AuthInterceptor(
                     val authRepository: AuthRepository = get()
                     authRepository.refreshToken(refreshToken).collect { result ->
                         result.onSuccess { authResponse ->
-                            val expiresIn = authResponse.expiresIn ?: 60L
+                            val expiresIn = authResponse.expiresIn ?: 1000L
                             Log.d(
                                 "AuthInterceptor",
                                 "Токен успешно обновлён после 401. Новый access_token: ${authResponse.access_token}, expiresIn: $expiresIn"
