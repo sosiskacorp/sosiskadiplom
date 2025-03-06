@@ -98,13 +98,16 @@ class AchievementsFragment : Fragment() {
                     val allAchievements = allResponse.body()?.achievements ?: emptyList()
                     val userAchievements = userResponse.body()?.achievements ?: emptyList()
 
-                    // Объединяем списки: для каждого достижения из общего списка
-                    // ищем соответствующее достижение в пользовательском списке по id.
+                    // Объединяем списки: для каждого достижения из общего списка ищем соответствующее в пользовательском списке
                     val mergedAchievements = allAchievements.map { achievement ->
                         val userAch = userAchievements.find { it.id == achievement.id }
                         if (userAch != null) {
-                            // Помечаем достижение как выполненное и обновляем поле condition (если необходимо)
-                            achievement.copy(achieved = true, condition = userAch.condition)
+                            // Парсим условие для достижения
+                            val condition = parseCondition(userAch.condition ?: "")
+                            // Считаем достижение выполненным только если current_count >= condition.count
+                            val currentCount = achievement.current_count ?: 0
+                            val isCompleted = currentCount >= condition.count
+                            achievement.copy(achieved = isCompleted, condition = userAch.condition)
                         } else {
                             achievement.copy(achieved = false)
                         }

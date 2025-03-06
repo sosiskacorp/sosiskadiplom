@@ -69,7 +69,7 @@ class RegisterFragment : Fragment() {
             binding.passwordLayout.error = "Введите пароль"
             isValid = false
         } else if (!isPasswordValid(password)) {
-            binding.passwordLayout.error = "Пароль должен содержать минимум 8 символов, одну заглавную букву, одну цифру и один специальный символ"
+            binding.passwordLayout.error = "Пароль должен содержать минимум 8 символов, одну заглавную букву, одну маленькую букву, одну цифру и один специальный символ"
             isValid = false
         } else {
             binding.passwordLayout.error = null
@@ -107,7 +107,8 @@ class RegisterFragment : Fragment() {
                         }
                         is AuthUiState.Success -> {
                             binding.progressBar.visibility = View.GONE
-                            findNavController().navigate(R.id.action_registerFragment_to_homeFragment)
+                            Toast.makeText(context, "Вы успешно зарегистрировались!", Toast.LENGTH_SHORT).show()
+                            findNavController().navigate(R.id.action_registerFragment_to_loginFragment)
                         }
                         is AuthUiState.Error -> {
                             binding.registerButton.isEnabled = true

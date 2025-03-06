@@ -27,6 +27,9 @@
         android:label="Register"
         tools:layout="@layout/fragment_register">
         <action
+            android:id="@+id/action_registerFragment_to_loginFragment"
+            app:destination="@id/navigation_login" />
+        <action
             android:id="@+id/action_registerFragment_to_homeFragment"
             app:destination="@id/navigation_home"
             app:popUpTo="@id/navigation_login"
