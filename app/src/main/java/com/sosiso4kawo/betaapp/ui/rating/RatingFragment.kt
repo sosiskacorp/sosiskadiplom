@@ -56,6 +56,10 @@ class RatingFragment : Fragment() {
         binding.usersRecyclerView.layoutManager = layoutManager
         binding.usersRecyclerView.adapter = userAdapter
 
+        // Reset pagination state when fragment is created
+        currentOffset = 0
+        isLastPage = false
+
         // Нижний отступ, чтобы последний элемент не наслаивался на navigation bar (например, 72dp)
         binding.usersRecyclerView.apply {
             clipToPadding = false

@@ -26,6 +26,7 @@ class CustomHeaderView @JvmOverloads constructor(
         binding.progressBar.visibility = GONE
         binding.notificationButton.visibility = GONE
         binding.editProfileButton.visibility = GONE
+        binding.backButton.visibility = GONE
         binding.headerContainer.setLayerType(View.LAYER_TYPE_HARDWARE, null)
     }
 
@@ -62,5 +63,15 @@ class CustomHeaderView @JvmOverloads constructor(
      */
     fun setHeaderBackgroundColor(@ColorRes colorResId: Int) {
         binding.headerContainer.setBackgroundColor(ContextCompat.getColor(context, colorResId))
+    }
+
+    fun showBackButton(show: Boolean = true) {
+        binding.backButton.visibility = if (show) View.VISIBLE else View.GONE
+    }
+
+    fun setOnBackClickListener(listener: () -> Unit) {
+        binding.backButton.setOnClickListener {
+            listener.invoke()
+        }
     }
 }

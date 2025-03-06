@@ -35,6 +35,14 @@ class UserDetailsFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentUserDetailsBinding.inflate(inflater, container, false)
+        binding.header.apply {
+            setHeaderBackgroundColor(R.color.header_rating)
+            setTitle("Профиль пользователя")
+            showBackButton(true)
+            setOnBackClickListener {
+                requireActivity().onBackPressed()
+            }
+        }
         return binding.root
     }
 

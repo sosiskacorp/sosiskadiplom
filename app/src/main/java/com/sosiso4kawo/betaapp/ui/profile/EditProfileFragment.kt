@@ -69,6 +69,8 @@ class EditProfileFragment : Fragment() {
         binding.header.apply {
             setHeaderBackgroundColor(R.color.header_profile)
             setTitle("Редактирование профиля")
+            showBackButton(true)
+            setOnBackClickListener { findNavController().navigateUp() }
         }
         return binding.root
     }
