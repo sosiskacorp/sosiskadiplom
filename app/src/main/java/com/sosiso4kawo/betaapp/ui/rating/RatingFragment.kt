@@ -109,9 +109,15 @@ class RatingFragment : Fragment() {
             userRepository.getAllUsers(limit = pageSize, offset = offset).collect { result ->
                 when (result) {
                     is Result.Success -> {
-                        val users = result.value
+                        var users = result.value
                         Log.d("RatingFragment", "Loaded ${users.size} users")
+                        // При первой загрузке, если текущего пользователя нет в списке, добавляем его в начало
                         if (offset == 0) {
+                            sessionManager.getUserData()?.let { currentUser ->
+                                if (users.none { it.uuid == currentUser.uuid }) {
+                                    users = listOf(currentUser) + users
+                                }
+                            }
                             userAdapter.updateUsers(users)
                         } else {
                             userAdapter.addUsers(users)

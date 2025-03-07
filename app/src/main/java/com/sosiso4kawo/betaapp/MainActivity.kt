@@ -2,7 +2,6 @@ package com.sosiso4kawo.betaapp
 
 import android.os.Bundle
 import android.view.View
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
@@ -10,8 +9,10 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupWithNavController
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.sosiso4kawo.betaapp.databinding.ActivityMainBinding
 import com.sosiso4kawo.betaapp.data.repository.UserRepository
+import com.sosiso4kawo.betaapp.util.SessionManager
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
@@ -19,6 +20,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private val userRepository: UserRepository by inject()
+    private val sessionManager: SessionManager by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,17 +28,26 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Check session validity before setting up navigation
+        // При запуске приложения проверяем сессию через получение профиля
         lifecycleScope.launch {
             try {
                 userRepository.getProfile().collect { result ->
-                    // If profile fetch succeeds, proceed with navigation setup
+                    // Если профиль успешно получен, настраиваем навигацию для авторизованного пользователя
                     setupNavigationAfterAuth()
                 }
             } catch (e: Exception) {
-                // If profile fetch fails (expired/missing tokens), setup navigation with login
+                // Если профиль не получен (например, из-за истечения токена), настраиваем навигацию для экрана логина
                 setupNavigationForLogin()
             }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Централизованная проверка при возобновлении активности
+        if (sessionManager.isAccessTokenExpired()) {
+            sessionManager.clearSession()
+            setupNavigationForLogin()
         }
     }
 
@@ -60,20 +71,19 @@ class MainActivity : AppCompatActivity() {
     private fun setupNavigation(navView: BottomNavigationView, navController: NavController) {
         val appBarConfiguration = AppBarConfiguration(
             setOf(
-                R.id.navigation_home, R.id.navigation_rating, R.id.navigation_achievements, R.id.navigation_profile
+                R.id.navigation_home,
+                R.id.navigation_rating,
+                R.id.navigation_achievements,
+                R.id.navigation_profile
             )
         )
         navView.setupWithNavController(navController)
 
-        // Hide bottom navigation on auth screens
+        // Скрываем нижнюю панель навигации на экранах авторизации
         navController.addOnDestinationChangedListener { _: NavController, destination: NavDestination, _: Bundle? ->
             when (destination.id) {
-                R.id.navigation_login, R.id.navigation_register -> {
-                    navView.visibility = View.GONE
-                }
-                else -> {
-                    navView.visibility = View.VISIBLE
-                }
+                R.id.navigation_login, R.id.navigation_register -> navView.visibility = View.GONE
+                else -> navView.visibility = View.VISIBLE
             }
         }
     }
