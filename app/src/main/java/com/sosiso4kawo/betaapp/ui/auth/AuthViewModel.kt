@@ -7,7 +7,6 @@ import com.sosiso4kawo.betaapp.data.repository.AuthRepository
 import com.sosiso4kawo.betaapp.util.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class AuthViewModel(
@@ -16,7 +15,7 @@ class AuthViewModel(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Initial)
-    val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<AuthUiState> = _uiState
 
     init {
         checkSession()
@@ -25,12 +24,16 @@ class AuthViewModel(
     private fun checkSession() {
         viewModelScope.launch {
             val accessToken = sessionManager.getAccessToken()
-            if (!accessToken.isNullOrEmpty()) {
-                // Если токен существует, пользователь уже авторизован.
-                // Передаём значение по умолчанию для expiresIn, например 3600 секунд.
-                _uiState.value = AuthUiState.Success(AuthResponse(accessToken, "", 60L))
+            // Если токен существует и не истёк, считаем пользователя авторизованным
+            if (accessToken != null && !sessionManager.isAccessTokenExpired()) {
+                _uiState.value = AuthUiState.Success(
+                    AuthResponse(
+                        access_token = accessToken,
+                        refresh_token = sessionManager.getRefreshToken() ?: "",
+                        expiresIn = 3600L
+                    )
+                )
             } else {
-                // Если токена нет, пользователь не авторизован.
                 _uiState.value = AuthUiState.LoggedOut
             }
         }
@@ -66,7 +69,7 @@ class AuthViewModel(
             repository.logout().collect { result ->
                 _uiState.value = result.fold(
                     onSuccess = {
-                        sessionManager.clearSession() // Очищаем сессию при выходе
+                        sessionManager.clearSession()
                         AuthUiState.LoggedOut
                     },
                     onFailure = { AuthUiState.Error(it.message ?: "Ошибка при выходе") }

@@ -1,3 +1,5 @@
+package com.sosiso4kawo.betaapp.data.api
+
 import com.sosiso4kawo.betaapp.data.model.UpdateProfileRequest
 import com.sosiso4kawo.betaapp.data.model.User
 import com.sosiso4kawo.betaapp.data.model.UsersResponse

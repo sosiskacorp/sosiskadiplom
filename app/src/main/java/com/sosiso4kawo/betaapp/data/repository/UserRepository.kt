@@ -1,6 +1,6 @@
 package com.sosiso4kawo.betaapp.data.repository
 
-import UserService  // убедитесь, что путь правильный
+import com.sosiso4kawo.betaapp.data.api.UserService
 import android.util.Log
 import com.google.gson.GsonBuilder
 import com.sosiso4kawo.betaapp.data.model.AuthError
