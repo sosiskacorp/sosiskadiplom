@@ -1,6 +1,8 @@
 package com.sosiso4kawo.betaapp.di
 
+import com.sosiso4kawo.betaapp.data.api.AchievementsService
 import com.sosiso4kawo.betaapp.data.api.AuthService
+import com.sosiso4kawo.betaapp.data.api.CoursesService
 import com.sosiso4kawo.betaapp.data.api.UserService
 import com.sosiso4kawo.betaapp.data.repository.AuthRepository
 import com.sosiso4kawo.betaapp.data.repository.UserRepository
@@ -35,7 +37,9 @@ val appModule = module {
     }
 
     single { get<Retrofit>().create(AuthService::class.java) }
+    single { get<Retrofit>().create(AchievementsService::class.java) }
     single { get<Retrofit>().create(UserService::class.java) }
+    single { get<Retrofit>().create(CoursesService::class.java) }
 
     // Репозитории
     single { AuthRepository(get(), get()) }

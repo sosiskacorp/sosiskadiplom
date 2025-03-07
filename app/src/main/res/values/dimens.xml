@@ -5,7 +5,7 @@
 
     <!-- Level button dimensions -->
     <dimen name="level_button_radius">8dp</dimen>
-    <dimen name="level_button_elevation">2dp</dimen>
+    <dimen name="level_button_elevation">4dp</dimen> <!-- Увеличил возвышение для лучшего визуального эффекта -->
     <dimen name="level_button_margin">8dp</dimen>
     <dimen name="bottom_padding">72dp</dimen>
 </resources>

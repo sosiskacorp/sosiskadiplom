@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.ContextCompat
-import androidx.gridlayout.widget.GridLayout
 import com.google.android.material.card.MaterialCardView
 import android.view.ViewGroup.MarginLayoutParams
 import com.sosiso4kawo.betaapp.R
@@ -27,21 +26,6 @@ class LevelButtonView @JvmOverloads constructor(
 
         radius = resources.getDimensionPixelSize(R.dimen.level_button_radius).toFloat()
         cardElevation = resources.getDimensionPixelSize(R.dimen.level_button_elevation).toFloat()
-
-        // Вычисляем размер кнопки на основе размера экрана
-        val displayMetrics = context.resources.displayMetrics
-        val screenWidth = displayMetrics.widthPixels
-
-        val horizontalMargins = 2 * resources.getDimensionPixelSize(R.dimen.level_button_margin)
-        val screenPadding = 2 * (32 * displayMetrics.density).toInt() // 32dp * 2 (левый и правый отступы)
-
-        // Размер кнопки = (ширина экрана - отступы) / 3 (количество колонок)
-        val buttonSize = (screenWidth - screenPadding - horizontalMargins) / 3
-        val margin = resources.getDimensionPixelSize(R.dimen.level_button_margin)
-
-        val params = MarginLayoutParams(buttonSize, buttonSize)
-        params.setMargins(margin, margin, margin, margin)
-        layoutParams = params
     }
 
     enum class LevelStatus {

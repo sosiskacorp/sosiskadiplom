@@ -40,7 +40,24 @@
         android:id="@+id/navigation_home"
         android:name="com.sosiso4kawo.betaapp.ui.home.HomeFragment"
         android:label="@string/title_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home">
+        <action
+            android:id="@+id/action_navigation_home_to_courseDetailFragment"
+            app:destination="@+id/navigation_course_detail" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_course_detail"
+        android:name="com.sosiso4kawo.betaapp.ui.course_detail.CourseDetailFragment"
+        android:label="Course Detail"
+        tools:layout="@layout/fragment_course_detail">
+        <argument
+            android:name="courseUuid"
+            app:argType="string" />
+        <argument
+            android:name="courseTitle"
+            app:argType="string" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_rating"

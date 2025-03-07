@@ -45,7 +45,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Уровень"
+                android:text="Урок"
                 android:textSize="14sp"
                 android:includeFontPadding="false"
                 android:layout_gravity="center_vertical" />
