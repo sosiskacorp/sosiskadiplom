@@ -50,7 +50,6 @@ class RatingFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         userAdapter = UserAdapter()
         val layoutManager = LinearLayoutManager(requireContext())
         binding.usersRecyclerView.layoutManager = layoutManager

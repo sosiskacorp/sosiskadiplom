@@ -68,7 +68,6 @@ class AchievementsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         // Получаем ссылки на дочерние элементы внутри progressSection
         tvProgressLabel = binding.progressSection.findViewById(R.id.tvProgressLabel)
         tvProgressPercent = binding.progressSection.findViewById(R.id.tvProgressPercent)

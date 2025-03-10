@@ -42,7 +42,7 @@ class AuthInterceptor(
                             authRepository.refreshToken(refreshToken).collect { result ->
                                 result.onSuccess { authResponse ->
                                     // Если expiresIn не пришёл, используем значение по умолчанию (например, 3600 сек)
-                                    val expiresIn = authResponse.expiresIn ?: 3600L
+                                    val expiresIn = authResponse.expiresIn ?: (48 * 3600L)
                                     sessionManager.saveTokens(
                                         authResponse.access_token,
                                         authResponse.refresh_token,
@@ -90,7 +90,7 @@ class AuthInterceptor(
                             val authRepository: AuthRepository = get()
                             authRepository.refreshToken(refreshToken).collect { result ->
                                 result.onSuccess { authResponse ->
-                                    val expiresIn = authResponse.expiresIn ?: 3600L
+                                    val expiresIn = authResponse.expiresIn ?: (48 * 3600L)
                                     sessionManager.saveTokens(
                                         authResponse.access_token,
                                         authResponse.refresh_token,

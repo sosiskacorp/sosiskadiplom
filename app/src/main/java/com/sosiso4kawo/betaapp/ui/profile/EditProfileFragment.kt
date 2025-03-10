@@ -68,7 +68,7 @@ class EditProfileFragment : Fragment() {
         sessionManager = SessionManager(requireContext())
         binding.header.apply {
             setHeaderBackgroundColor(R.color.header_profile)
-            setTitle("Редактирование профиля")
+            setTitle("Редактирование")
             showBackButton(true)
             setOnBackClickListener { findNavController().navigateUp() }
         }
