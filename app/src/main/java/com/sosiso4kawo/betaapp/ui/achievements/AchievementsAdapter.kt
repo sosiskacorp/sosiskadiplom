@@ -12,13 +12,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sosiso4kawo.betaapp.R
 import com.sosiso4kawo.betaapp.data.model.Achievement
 
-class AchievementsAdapter : ListAdapter<Achievement, AchievementsAdapter.AchievementViewHolder>(
-    DiffCallback()
-) {
+class AchievementsAdapter : ListAdapter<Achievement, AchievementsAdapter.AchievementViewHolder>(DiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AchievementViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_achievement, parent, false)
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_achievement, parent, false)
         return AchievementViewHolder(view)
     }
 
@@ -43,7 +40,7 @@ class AchievementsAdapter : ListAdapter<Achievement, AchievementsAdapter.Achieve
                 itemView.setBackgroundColor(Color.WHITE)
             }
 
-            // Устанавливаем квадратную форму: делаем высоту равной ширине
+            // Делаем элемент квадратным
             itemView.post {
                 val width = itemView.width
                 if (itemView.layoutParams.height != width) {
@@ -59,6 +56,6 @@ class AchievementsAdapter : ListAdapter<Achievement, AchievementsAdapter.Achieve
             oldItem.id == newItem.id
 
         override fun areContentsTheSame(oldItem: Achievement, newItem: Achievement): Boolean =
-            oldItem == newItem
+            oldItem.achieved == newItem.achieved && oldItem.current_count == newItem.current_count
     }
 }

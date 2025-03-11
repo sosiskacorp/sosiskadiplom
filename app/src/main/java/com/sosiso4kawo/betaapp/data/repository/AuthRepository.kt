@@ -25,8 +25,14 @@ class AuthRepository(private val authService: AuthService, private val sessionMa
                         sessionManager.saveTokens(
                             accessToken = body.access_token,
                             refreshToken = body.refresh_token,
-                            expiresIn = body.expiresIn ?: 3600L
+                            expiresIn = body.expiresIn ?: (48*3600L)
                         )
+                        val profileResponse = authService.getProfile("Bearer ${body.access_token}")
+                        if (profileResponse.isSuccessful) {
+                            profileResponse.body()?.let { user ->
+                                sessionManager.saveUserData(user)
+                            }
+                        }
                         emit(Result.success(body))
                         Log.d("AuthRepository", "Токены сохранены: access_token=${body.access_token}, refresh_token=${body.refresh_token}")
                     } else {

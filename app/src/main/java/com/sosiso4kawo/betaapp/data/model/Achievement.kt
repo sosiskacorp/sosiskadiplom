@@ -6,20 +6,15 @@ data class Achievement(
     val description: String,
     val secret: Boolean,
     // Поля для списка всех достижений
-    val current_count: Int? = null,
-    val achieved: Boolean? = null,
+    val current_count: Int?,
+    val achieved: Boolean?,
     val created_at: String,
-    val achieved_at: String? = null,
+    val achieved_at: String?,
     // Поле condition присутствует только в ответе для конкретного пользователя
-    val condition: String? = null
+    val condition: Condition?
 )
 
 data class Condition(
-    val action: String? = null,
-    val count: Int = 0,
-    val timeframe: String? = null,
-    val stat: String? = null,
-    val top_percent: Int = 0,
-    val action_seq: List<String>? = null,
-    val secret: Boolean = false
+    val count: Int,
+    val action: String?
 )

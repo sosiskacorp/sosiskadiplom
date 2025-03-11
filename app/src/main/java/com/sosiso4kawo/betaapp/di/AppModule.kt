@@ -46,5 +46,5 @@ val appModule = module {
     single { UserRepository(get(), get()) }
 
     // ViewModel
-    viewModel { AuthViewModel(get(), get()) }
+    viewModel { AuthViewModel(get(), get(), get()) }
 }

@@ -56,6 +56,11 @@ class MainActivity : AppCompatActivity() {
             val navController = androidx.navigation.fragment.NavHostFragment.findNavController(navHostFragment)
             val navView: BottomNavigationView = binding.navView
             setupNavigation(navView, navController)
+            lifecycleScope.launch {
+                if (sessionManager.getUserData() == null) {
+                    userRepository.getProfile().collect { /* Обработка результата */ }
+                }
+            }
         }
     }
 
