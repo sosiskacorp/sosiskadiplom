@@ -137,8 +137,8 @@
             android:name="exerciseUuid"
             app:argType="string" />
         <action
-            android:id="@+id/action_exerciseQuestionsFragment_to_courseDetailFragment"
-            app:destination="@id/navigation_course_detail"
+            android:id="@+id/action_exerciseQuestionsFragment_to_home"
+            app:destination="@id/navigation_home"
             app:popUpTo="@id/exerciseQuestionsFragment"
             app:popUpToInclusive="true" />
     </fragment>

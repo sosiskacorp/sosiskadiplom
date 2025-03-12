@@ -27,6 +27,7 @@ class CustomHeaderView @JvmOverloads constructor(
         binding.notificationButton.visibility = GONE
         binding.editProfileButton.visibility = GONE
         binding.backButton.visibility = GONE
+        binding.closeButton.visibility = GONE
         binding.headerContainer.setLayerType(View.LAYER_TYPE_HARDWARE, null)
     }
 
@@ -67,6 +68,16 @@ class CustomHeaderView @JvmOverloads constructor(
 
     fun showBackButton(show: Boolean = true) {
         binding.backButton.visibility = if (show) View.VISIBLE else View.GONE
+    }
+
+    fun showCloseButton(show: Boolean = true) {
+        binding.closeButton.visibility = if (show) View.VISIBLE else View.GONE
+    }
+
+    fun setOnCloseClickListener(listener: () -> Unit) {
+        binding.closeButton.setOnClickListener {
+            listener.invoke()
+        }
     }
 
     fun setOnBackClickListener(listener: () -> Unit) {

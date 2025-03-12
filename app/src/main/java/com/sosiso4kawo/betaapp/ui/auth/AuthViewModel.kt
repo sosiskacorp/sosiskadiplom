@@ -32,7 +32,7 @@ class AuthViewModel(
                     AuthResponse(
                         access_token = accessToken,
                         refresh_token = sessionManager.getRefreshToken() ?: "",
-                        expiresIn = 48*3600L
+                        expiresIn = sessionManager.getExpiresIn()
                     )
                 )
             } else {

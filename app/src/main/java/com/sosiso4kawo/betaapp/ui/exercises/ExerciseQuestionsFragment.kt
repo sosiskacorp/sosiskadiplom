@@ -14,10 +14,15 @@ import androidx.navigation.fragment.findNavController
 import com.sosiso4kawo.betaapp.R
 import com.sosiso4kawo.betaapp.data.api.ExercisesService
 import com.sosiso4kawo.betaapp.data.model.*
+import com.sosiso4kawo.betaapp.databinding.FragmentExerciseQuestionsBinding
+import com.sosiso4kawo.betaapp.databinding.FragmentHomeBinding
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
 class ExerciseQuestionsFragment : Fragment() {
+
+    private var _binding: FragmentExerciseQuestionsBinding? = null
+    private val binding get() = _binding!!
 
     private val exercisesService: ExercisesService by inject()
     private var exerciseUuid: String? = null
@@ -40,19 +45,36 @@ class ExerciseQuestionsFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
-        // Разметка включает кастомный хедер и основной контент
-        return inflater.inflate(R.layout.fragment_exercise_questions, container, false)
+        _binding = FragmentExerciseQuestionsBinding.inflate(inflater, container, false)
+        setupInitialViews()
+        return binding.root
+    }
+
+    private fun setupInitialViews() {
+        binding.header.apply {
+            setHeaderBackgroundColor(R.color.header_home)
+            showCloseButton()
+            setOnNotificationClickListener { /* Пусто, если не нужен */ }
+
+            // Устанавливаем обработчик закрытия
+            setOnCloseClickListener {
+                AlertDialog.Builder(requireContext())
+                    .setTitle("Подтверждение")
+                    .setMessage("При завершении теста весь прогресс не будет сохранён. Вы действительно хотите выйти?")
+                    .setPositiveButton("Да") { _, _ ->
+                        findNavController().navigate(R.id.action_exerciseQuestionsFragment_to_home)
+                    }
+                    .setNegativeButton("Нет", null)
+                    .show()
+            }
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        // Инициализируем элементы UI
-        header = view.findViewById(R.id.view_custom_header)
-        tvQuestionText = view.findViewById(R.id.tvQuestionText)
-        optionsContainer = view.findViewById(R.id.optionsContainer)
-        btnNext = view.findViewById(R.id.btnNext)
-
-        setupHeader()
-
+        super.onViewCreated(view, savedInstanceState)
+        btnNext = binding.btnNext  // Initialize btnNext from binding
+        tvQuestionText = binding.tvQuestionText  // Similarly, initialize other views if needed
+        optionsContainer = binding.optionsContainer
         btnNext.setOnClickListener {
             lifecycleScope.launch {
                 processAndCheckAnswerForCurrentQuestion()
@@ -66,34 +88,12 @@ class ExerciseQuestionsFragment : Fragment() {
                         "Тест завершён. Правильных ответов: $correctAnswersCount из ${questions.size}",
                         Toast.LENGTH_LONG
                     ).show()
-                    findNavController().navigate(R.id.action_exerciseQuestionsFragment_to_courseDetailFragment)
+                    findNavController().navigate(R.id.action_exerciseQuestionsFragment_to_home)
                 }
             }
         }
 
         loadQuestions()
-    }
-
-    private fun setupHeader() {
-        // Изменяем и настраиваем кнопку "назад" – заменяем на крестик
-        val backButton: ImageButton = header.findViewById(R.id.back_button)
-        backButton.setImageResource(R.drawable.ic_close) // ваш ресурс с иконкой креста
-        backButton.setOnClickListener {
-            // Показываем диалог подтверждения
-            AlertDialog.Builder(requireContext())
-                .setTitle("Внимание")
-                .setMessage("При завершении теста весь прогресс не будет сохранён. Вы уверены, что хотите выйти?")
-                .setPositiveButton("Да") { dialog, _ ->
-                    dialog.dismiss()
-                    findNavController().navigate(R.id.action_exerciseQuestionsFragment_to_courseDetailFragment)
-                }
-                .setNegativeButton("Отмена") { dialog, _ ->
-                    dialog.dismiss()
-                }
-                .show()
-        }
-
-        // При необходимости можно настроить другие элементы хедера (например, progress_bar, уведомления и т.д.)
     }
 
     private fun loadQuestions() {

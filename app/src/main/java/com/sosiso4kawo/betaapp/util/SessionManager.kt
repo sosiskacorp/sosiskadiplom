@@ -16,6 +16,7 @@ class SessionManager(context: Context) {
         private const val KEY_REFRESH_TOKEN = "refresh_token"
         private const val KEY_TOKEN_EXPIRY = "token_expiry"
         private const val KEY_USER_DATA = "user_data"
+        private const val KEY_EXPIRES_IN = "expires_in"
     }
 
     fun saveTokens(accessToken: String, refreshToken: String, expiresIn: Long) {
@@ -25,6 +26,7 @@ class SessionManager(context: Context) {
             putString(KEY_ACCESS_TOKEN, accessToken)
             putString(KEY_REFRESH_TOKEN, refreshToken)
             putLong(KEY_TOKEN_EXPIRY, expiryTime)
+            putLong(KEY_EXPIRES_IN, expiresIn)
             apply()
         }
     }
@@ -53,4 +55,6 @@ class SessionManager(context: Context) {
     }
 
     fun getUserUuid(): String? = getUserData()?.uuid
+
+    fun getExpiresIn(): Long = prefs.getLong(KEY_EXPIRES_IN, 48 * 3600L)
 }
