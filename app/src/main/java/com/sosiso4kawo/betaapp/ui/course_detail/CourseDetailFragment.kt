@@ -89,9 +89,7 @@ class CourseDetailFragment : Fragment() {
             false
         )
 
-        lessonsAdapter = LessonsAdapter(lessonsList) { lesson ->
-            Log.d("CourseDetailFragment", "Lesson selected: ${lesson.title}")
-        }
+        lessonsAdapter = LessonsAdapter(lessonsList)
         binding.rvLessons.adapter = lessonsAdapter
     }
 

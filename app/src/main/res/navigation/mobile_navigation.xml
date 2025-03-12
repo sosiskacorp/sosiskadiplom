@@ -97,4 +97,50 @@
         android:name="com.sosiso4kawo.betaapp.ui.userdetails.UserDetailsFragment"
         android:label="User Details"
         tools:layout="@layout/fragment_user_details" />
+
+    <fragment
+        android:id="@+id/lessonContentFragment"
+        android:name="com.sosiso4kawo.betaapp.ui.lessons.LessonContentFragment"
+        android:label="Контент урока"
+        tools:layout="@layout/fragment_lesson_content">
+        <argument
+            android:name="lessonUuid"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/exerciseDetailFragment"
+        android:name="com.sosiso4kawo.betaapp.ui.exercises.ExerciseDetailFragment"
+        android:label="Детали упражнения"
+        tools:layout="@layout/fragment_exercise_detail">
+        <argument
+            android:name="exerciseUuid"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/questionDetailFragment"
+        android:name="com.sosiso4kawo.betaapp.ui.exercises.QuestionDetailFragment"
+        android:label="Детали вопроса"
+        tools:layout="@layout/fragment_question_detail">
+        <argument
+            android:name="questionUuid"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/exerciseQuestionsFragment"
+        android:name="com.sosiso4kawo.betaapp.ui.exercises.ExerciseQuestionsFragment"
+        android:label="Вопросы упражнения"
+        tools:layout="@layout/fragment_exercise_questions">
+        <argument
+            android:name="exerciseUuid"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_exerciseQuestionsFragment_to_courseDetailFragment"
+            app:destination="@id/navigation_course_detail"
+            app:popUpTo="@id/exerciseQuestionsFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
 </navigation>

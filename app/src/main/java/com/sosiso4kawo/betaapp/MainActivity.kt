@@ -87,7 +87,7 @@ class MainActivity : AppCompatActivity() {
         // Скрываем нижнюю панель навигации на экранах авторизации
         navController.addOnDestinationChangedListener { _: NavController, destination: NavDestination, _: Bundle? ->
             when (destination.id) {
-                R.id.navigation_login, R.id.navigation_register, R.id.navigation_course_detail, R.id.navigation_edit_profile -> navView.visibility = View.GONE
+                R.id.navigation_login, R.id.navigation_register, R.id.navigation_course_detail, R.id.navigation_edit_profile, R.id.exerciseQuestionsFragment, R.id.exerciseDetailFragment -> navView.visibility = View.GONE
                 else -> navView.visibility = View.VISIBLE
             }
         }

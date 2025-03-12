@@ -1,8 +1,12 @@
 package com.sosiso4kawo.betaapp.di
 
+import com.google.gson.FieldNamingPolicy
+import com.google.gson.GsonBuilder
 import com.sosiso4kawo.betaapp.data.api.AchievementsService
 import com.sosiso4kawo.betaapp.data.api.AuthService
 import com.sosiso4kawo.betaapp.data.api.CoursesService
+import com.sosiso4kawo.betaapp.data.api.ExercisesService
+import com.sosiso4kawo.betaapp.data.api.LessonsService
 import com.sosiso4kawo.betaapp.data.api.UserService
 import com.sosiso4kawo.betaapp.data.repository.AuthRepository
 import com.sosiso4kawo.betaapp.data.repository.UserRepository
@@ -27,12 +31,19 @@ val appModule = module {
             .build()
     }
 
-    // Retrofit
+    // Создаем кастомный Gson-инстанс с нужной политикой именования
+    single {
+        GsonBuilder()
+            .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+            .create()
+    }
+
+    // Retrofit с кастомным Gson
     single {
         Retrofit.Builder()
             .baseUrl("http://176.109.108.209:3211")
             .client(get())
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create(get()))
             .build()
     }
 
@@ -40,6 +51,8 @@ val appModule = module {
     single { get<Retrofit>().create(AchievementsService::class.java) }
     single { get<Retrofit>().create(UserService::class.java) }
     single { get<Retrofit>().create(CoursesService::class.java) }
+    single { get<Retrofit>().create(LessonsService::class.java) }
+    single { get<Retrofit>().create(ExercisesService::class.java) }
 
     // Репозитории
     single { AuthRepository(get(), get()) }

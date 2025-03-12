@@ -1,20 +1,30 @@
 package com.sosiso4kawo.betaapp.ui.lessons
 
+import android.os.Bundle
 import android.view.ViewGroup
+import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.sosiso4kawo.betaapp.R
 import com.sosiso4kawo.betaapp.data.model.Lesson
 import com.sosiso4kawo.betaapp.ui.custom.LevelButtonView
 
 class LessonsAdapter(
-    private val lessons: List<Lesson>,
-    private val onLessonClick: (Lesson) -> Unit
+    private val lessons: List<Lesson>
 ) : RecyclerView.Adapter<LessonsAdapter.LessonViewHolder>() {
 
     inner class LessonViewHolder(val levelButton: LevelButtonView) : RecyclerView.ViewHolder(levelButton) {
         fun bind(lesson: Lesson) {
             levelButton.setLevel(lesson.order, LevelButtonView.LevelStatus.AVAILABLE)
-            levelButton.setOnClickListener { onLessonClick(lesson) }
+            levelButton.setOnClickListener {
+                // Получаем Activity из контекста для показа диалога
+                val activity = levelButton.context as? FragmentActivity
+                activity?.let {
+                    val dialog = LessonInfoDialogFragment().apply {
+                        arguments = Bundle().apply { putString("lessonUuid", lesson.uuid) }
+                    }
+                    dialog.show(it.supportFragmentManager, "LessonInfoDialog")
+                }
+            }
         }
     }
 
