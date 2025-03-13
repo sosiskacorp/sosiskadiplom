@@ -6,9 +6,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.sosiso4kawo.betaapp.R
 import com.sosiso4kawo.betaapp.data.api.CoursesService
@@ -73,6 +75,14 @@ class HomeFragment : Fragment() {
     private fun setupCoursesSection() {
         // Настраиваем RecyclerView для курсов
         binding.rvCourses.layoutManager = LinearLayoutManager(context)
+        binding.rvCourses.addItemDecoration(
+            DividerItemDecoration(
+                requireContext(),
+                LinearLayoutManager.VERTICAL
+            ).apply {
+                setDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.divider)!!)
+            }
+        )
         coursesAdapter = CoursesAdapter(coursesList,
             onCourseClick = { course ->
                 // Переход к экрану уроков выбранного курса

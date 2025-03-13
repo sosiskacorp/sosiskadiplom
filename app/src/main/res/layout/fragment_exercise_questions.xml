@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- Подключаем кастомный хедер -->
+    <!-- Кастомный хедер -->
     <com.sosiso4kawo.betaapp.ui.custom.CustomHeaderView
         android:id="@+id/header"
         android:layout_width="0dp"
@@ -33,6 +33,16 @@
             android:layout_height="wrap_content"
             android:text="Вопрос"
             android:textAppearance="?attr/textAppearanceHeadline6" />
+
+        <!-- ImageView для картинки вопроса -->
+        <ImageView
+            android:id="@+id/ivQuestionImage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:adjustViewBounds="true"
+            android:scaleType="centerInside"
+            android:visibility="gone"
+            android:layout_marginTop="8dp" />
 
         <LinearLayout
             android:id="@+id/optionsContainer"

@@ -11,7 +11,8 @@ data class Question(
     val exercise_uuid: String,
     @SerializedName("question_options")
     val questionOptions: List<QuestionOption>? = null,
-    val matching: Matching? = null
+    val matching: Matching? = null,
+    val images: List<QuestionImage>? = null
 )
 
 data class QuestionType(
@@ -33,6 +34,11 @@ data class Matching(
     val leftSide: List<String>?,
     @SerializedName("right_side")
     val rightSide: List<String>?
+)
+
+data class QuestionImage(
+    @SerializedName("image_url")
+    val imageUrl: String
 )
 
 // Новая модель для проверки ответа

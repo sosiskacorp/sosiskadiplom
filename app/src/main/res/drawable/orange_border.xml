@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Прозрачный фон -->
+    <solid android:color="@android:color/transparent" />
+    <!-- Оранжевая рамка с шириной 2dp; цвет берётся из colors.xml (@color/orange) -->
+    <stroke
+        android:width="2dp"
+        android:color="@color/orange" />
+    <!-- Скругление углов -->
+    <corners android:radius="8dp" />
+</shape>

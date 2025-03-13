@@ -5,8 +5,6 @@
     android:id="@+id/header_container"
     android:layout_width="match_parent"
     android:layout_height="72dp"
-    android:paddingTop="16dp"
-    android:paddingBottom="16dp"
     android:fitsSystemWindows="true">
 
     <TextView
