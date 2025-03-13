@@ -25,7 +25,7 @@ class AuthRepository(private val authService: AuthService, private val sessionMa
                         sessionManager.saveTokens(
                             accessToken = body.access_token,
                             refreshToken = body.refresh_token,
-                            expiresIn = body.expiresIn ?: (48*3600L)
+                            expiresIn = body.expiresIn ?: (48 * 3600L)
                         )
                         val profileResponse = authService.getProfile("Bearer ${body.access_token}")
                         if (profileResponse.isSuccessful) {
@@ -46,6 +46,11 @@ class AuthRepository(private val authService: AuthService, private val sessionMa
                 }
                 else -> {
                     val errorBody = response.errorBody()?.string() ?: ""
+                    // Если ошибка связана с неверным форматом почты, возвращаем соответствующее сообщение
+                    if (errorBody.contains("Field validation for 'Email' failed on the 'email' tag")) {
+                        emit(Result.failure(Exception("Неверный формат почты")))
+                        return@flow
+                    }
                     Log.e("AuthRepository", "Login error: code=${response.code()}, error=$errorBody, headers=${response.headers()}")
 
                     val errorMessage = if (errorBody.isBlank()) {
@@ -74,7 +79,6 @@ class AuthRepository(private val authService: AuthService, private val sessionMa
             emit(Result.failure(Exception(errorMessage)))
         }
     }
-
 
     suspend fun register(email: String, password: String): Flow<Result<AuthResponse>> = flow {
         try {
@@ -248,6 +252,4 @@ class AuthRepository(private val authService: AuthService, private val sessionMa
             emit(Result.failure(Exception(errorMessage)))
         }
     }
-
-
 }

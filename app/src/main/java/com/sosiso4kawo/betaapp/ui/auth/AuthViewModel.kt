@@ -1,5 +1,6 @@
 package com.sosiso4kawo.betaapp.ui.auth
 
+import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sosiso4kawo.betaapp.data.model.AuthResponse
@@ -42,6 +43,10 @@ class AuthViewModel(
     }
 
     fun login(login: String, password: String) {
+        if (!Patterns.EMAIL_ADDRESS.matcher(login).matches()) {
+            _uiState.value = AuthUiState.Error("Неверный формат почты")
+            return
+        }
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
             repository.login(login, password).collect { result ->
@@ -54,6 +59,11 @@ class AuthViewModel(
     }
 
     fun register(email: String, password: String) {
+        // Добавлена проверка корректного формата почты
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            _uiState.value = AuthUiState.Error("Неверный формат почты")
+            return
+        }
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
             repository.register(email, password).collect { result ->
