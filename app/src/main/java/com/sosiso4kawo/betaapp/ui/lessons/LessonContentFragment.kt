@@ -35,7 +35,10 @@ class LessonContentFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val recyclerView = view.findViewById<RecyclerView>(R.id.rvExercises)
         exercisesAdapter = ExercisesAdapter(exercisesList) { exercise ->
-            val bundle = Bundle().apply { putString("exerciseUuid", exercise.uuid) }
+            val bundle = Bundle().apply {
+                putString("exerciseUuid", exercise.uuid)
+                putString("lessonUuid", lessonUuid) // Добавлено lessonUuid
+            }
             findNavController().navigate(R.id.exerciseDetailFragment, bundle)
         }
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
@@ -50,15 +53,15 @@ class LessonContentFragment : Fragment() {
                 val response = lessonsService.getLessonContent(uuid)
                 if (response.isSuccessful) {
                     response.body()?.let { exercises ->
-                        // Сортировка по полю order, чтобы упражнения шли подряд
                         val sortedExercises = exercises.sortedBy { it.order }
                         if (sortedExercises.isNotEmpty()) {
-                            // Автоматически переходим к первому упражнению
+                            // Исправленный блок перехода
                             val firstExercise = sortedExercises.first()
-                            val bundle = Bundle().apply { putString("exerciseUuid", firstExercise.uuid) }
+                            val bundle = Bundle().apply {
+                                putString("exerciseUuid", firstExercise.uuid)
+                                putString("lessonUuid", lessonUuid) // Добавлено lessonUuid
+                            }
                             findNavController().navigate(R.id.exerciseDetailFragment, bundle)
-                        } else {
-                            // Если упражнений нет – можно показать сообщение или выполнить другую логику
                         }
                     }
                 } else {

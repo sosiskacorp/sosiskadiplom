@@ -141,6 +141,11 @@
             app:destination="@id/navigation_home"
             app:popUpTo="@id/exerciseQuestionsFragment"
             app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_exerciseQuestionsFragment_to_exerciseDetailFragment"
+            app:destination="@id/exerciseDetailFragment"
+            app:popUpTo="@id/exerciseDetailFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
 </navigation>

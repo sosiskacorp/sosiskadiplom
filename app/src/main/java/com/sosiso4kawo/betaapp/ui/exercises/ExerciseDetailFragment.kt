@@ -1,6 +1,7 @@
 package com.sosiso4kawo.betaapp.ui.exercises
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.sosiso4kawo.betaapp.R
 import com.sosiso4kawo.betaapp.data.api.ExercisesService
+import com.sosiso4kawo.betaapp.data.api.LessonsService
 import com.sosiso4kawo.betaapp.data.model.Exercise
 import com.sosiso4kawo.betaapp.data.model.Question
 import kotlinx.coroutines.launch
@@ -19,7 +21,9 @@ import org.koin.android.ext.android.inject
 class ExerciseDetailFragment : Fragment() {
 
     private val exercisesService: ExercisesService by inject()
+    private val lessonsService: LessonsService by inject()
     private var exerciseUuid: String? = null
+    private var lessonUuid: String? = null
 
     private lateinit var tvExerciseTitle: TextView
     private lateinit var tvExerciseDescription: TextView
@@ -30,6 +34,8 @@ class ExerciseDetailFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         exerciseUuid = arguments?.getString("exerciseUuid")
+        lessonUuid = arguments?.getString("lessonUuid")
+        Log.d("ExerciseDetail", "Received lessonUuid: $lessonUuid")
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -46,7 +52,9 @@ class ExerciseDetailFragment : Fragment() {
         loadExerciseInfo()
 
         btnLoadQuestions.setOnClickListener {
-            val bundle = Bundle().apply { putString("exerciseUuid", exerciseUuid) }
+            val bundle = Bundle().apply {
+                putString("exerciseUuid", exerciseUuid)
+                putString("lessonUuid", lessonUuid) }
             findNavController().navigate(R.id.exerciseQuestionsFragment, bundle)
         }
 

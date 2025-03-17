@@ -22,6 +22,7 @@ import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.sosiso4kawo.betaapp.R
 import com.sosiso4kawo.betaapp.data.api.ExercisesService
+import com.sosiso4kawo.betaapp.data.api.LessonsService
 import com.sosiso4kawo.betaapp.data.model.*
 import com.sosiso4kawo.betaapp.databinding.FragmentExerciseQuestionsBinding
 import kotlinx.coroutines.launch
@@ -33,7 +34,10 @@ class ExerciseQuestionsFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val exercisesService: ExercisesService by inject()
+    private val lessonsService: LessonsService by inject()
+
     private var exerciseUuid: String? = null
+    private var lessonUuid: String? = null // Новая переменная для идентификатора урока
     private var questions: List<Question> = emptyList()
     private var currentQuestionIndex = 0
     private var correctAnswersCount = 0
@@ -43,21 +47,20 @@ class ExerciseQuestionsFragment : Fragment() {
     // Для множественного выбора
     private var selectedAnswers: MutableSet<String> = mutableSetOf()
     // Для вопросов с сопоставлением:
-    // - Храним выбранную кнопку левого ряда
     private var selectedLeftButton: Button? = null
-    // - Храним корректно сопоставлённые пары
     private var matchedPairs: MutableMap<String, String> = mutableMapOf()
 
     // UI элементы
     private lateinit var tvQuestionText: TextView
     private lateinit var ivQuestionImage: ImageView
-    private lateinit var optionsContainer: LinearLayout
+    private lateinit var optionsContainer: ViewGroup
     private lateinit var btnNext: Button
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         exerciseUuid = arguments?.getString("exerciseUuid")
+        lessonUuid = arguments?.getString("lessonUuid")
     }
 
     override fun onCreateView(
@@ -93,27 +96,128 @@ class ExerciseQuestionsFragment : Fragment() {
         ivQuestionImage = binding.ivQuestionImage
         optionsContainer = binding.optionsContainer
 
-        // Кнопка "Следующий" изначально скрыта до выбора ответа
         btnNext.visibility = View.GONE
 
         btnNext.setOnClickListener {
             lifecycleScope.launch {
                 processAndCheckAnswerForCurrentQuestion()
+
+                // Убедитесь, что currentQuestionIndex обновляется корректно
                 if (currentQuestionIndex < questions.size - 1) {
                     currentQuestionIndex++
                     displayCurrentQuestion()
                 } else {
-                    Toast.makeText(
-                        requireContext(),
-                        "Тест завершён. Правильных ответов: $correctAnswersCount из ${questions.size}",
-                        Toast.LENGTH_LONG
-                    ).show()
-                    findNavController().navigate(R.id.action_exerciseQuestionsFragment_to_home)
+                    Log.d("Navigation", "Все вопросы пройдены. Проверка следующего упражнения...")
+
+                    // Добавьте явный вызов handleNextExercise
+                    lessonUuid?.let { lessonId ->
+                        exerciseUuid?.let { currentExerciseId ->
+                            handleNextExercise(lessonId, currentExerciseId)
+                        } ?: run {
+                            Log.e("Navigation", "exerciseUuid is null")
+                            navigateToHome()
+                        }
+                    } ?: run {
+                        Log.e("Navigation", "lessonUuid is null")
+                        navigateToHome()
+                    }
                 }
             }
         }
-
         loadQuestions()
+    }
+
+    private fun showCompletionDialog(correctCount: Int) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Тест завершён")
+            .setMessage("Правильных ответов: $correctCount из ${questions.size}")
+            .setPositiveButton("OK") { _, _ -> }
+            .show()
+    }
+
+    private suspend fun handleNextExercise(lessonId: String, currentExerciseId: String) {
+        Log.d("NextExercise", "Начало обработки. Текущий exercise UUID: $currentExerciseId")
+
+        try {
+            val response = lessonsService.getLessonContent(lessonId)
+            Log.d("NextExercise", "Получен ответ от сервера. Успешно: ${response.isSuccessful}")
+
+            if (response.isSuccessful) {
+                Log.d("NextExercise", "Тело ответа: ${response.body()}")
+
+                response.body()?.let { lessons ->
+                    Log.d("NextExercise", "Количество уроков в ответе: ${lessons.size}")
+
+                    val lessonWithExercises = lessons.firstOrNull { it.exercises != null }
+                    if (lessonWithExercises == null) {
+                        Log.e("NextExercise", "Уроки не содержат упражнений")
+                        return@let
+                    }
+
+                    lessonWithExercises.exercises?.let { exercises ->
+                        Log.d("NextExercise", "Найдено упражнений: ${exercises.size}")
+
+                        val sortedExercises = exercises.sortedBy { it.order }
+                        Log.d("NextExercise", "Отсортированные упражнения: ${sortedExercises.joinToString { it.uuid }}")
+
+                        val currentIndex = sortedExercises.indexOfFirst { it.uuid == currentExerciseId }
+                        Log.d("NextExercise", "Индекс текущего упражнения: $currentIndex")
+
+                        if (currentIndex != -1 && currentIndex < sortedExercises.lastIndex) {
+                            val nextExercise = sortedExercises[currentIndex + 1]
+                            Log.d("NextExercise", "Следующее упражнение UUID: ${nextExercise.uuid}")
+                            navigateToExercise(nextExercise.uuid, lessonId)
+                        } else {
+                            Log.d("NextExercise", "Текущее упражнение последнее в списке")
+                            showFinalMessageAndNavigate()
+                        }
+                    }
+                } ?: run {
+                    Log.e("NextExercise", "Пустое тело ответа")
+                    navigateToHome()
+                }
+            } else {
+                Log.e("NextExercise", "Ошибка сервера: ${response.errorBody()?.string()}")
+                navigateToHome()
+            }
+        } catch (e: Exception) {
+            Log.e("NextExercise", "Исключение: ${e.javaClass.simpleName}", e)
+            Log.e("NextExercise", "Сообщение об ошибке: ${e.message}")
+            navigateToHome()
+        }
+    }
+
+    private fun showFinalMessageAndNavigate() {
+        Toast.makeText(
+            requireContext(),
+            "Это последнее упражнение в уроке",
+            Toast.LENGTH_LONG
+        ).show()
+        navigateToHome()
+    }
+
+    private fun navigateToExercise(exerciseUuid: String, lessonUuid: String) {
+        try {
+            Handler(Looper.getMainLooper()).postDelayed({
+                if (findNavController().currentDestination?.id == R.id.exerciseQuestionsFragment) {
+                    findNavController().navigate(
+                        R.id.action_exerciseQuestionsFragment_to_exerciseDetailFragment,
+                        Bundle().apply {
+                            putString("exerciseUuid", exerciseUuid)
+                            putString("lessonUuid", lessonUuid)
+                        }
+                    )
+                }
+            }, 1500)
+        } catch (e: Exception) {
+            Log.e("Navigation", "Error navigating: ${e.message}")
+        }
+    }
+
+    private fun navigateToHome() {
+        Handler(Looper.getMainLooper()).postDelayed({
+            findNavController().navigate(R.id.action_exerciseQuestionsFragment_to_home)
+        }, 1500)
     }
 
     private fun loadQuestions() {
@@ -344,6 +448,7 @@ class ExerciseQuestionsFragment : Fragment() {
                 }
             }
 // В методе updateUIForQuestion для вопросов с type_id == 3:
+// В блоке для вопросов с type_id == 3:
             3 -> {
                 val leftItems = question.matching?.leftSide.orEmpty()
                 val rightItemsOriginal = question.matching?.rightSide.orEmpty()
@@ -353,7 +458,7 @@ class ExerciseQuestionsFragment : Fragment() {
                         text = "Нет данных для сопоставления"
                     })
                 } else {
-                    // Формируем корректное сопоставление для последующей проверки
+                    // Формируем корректное сопоставление для последующей проверки (не используется в логике сопоставления)
                     val correctMapping = mutableMapOf<String, String>()
                     for (i in leftItems.indices) {
                         correctMapping[leftItems[i]] = rightItemsOriginal.getOrNull(i) ?: ""
@@ -362,7 +467,7 @@ class ExerciseQuestionsFragment : Fragment() {
 
                     // Очищаем ранее сохранённые пары
                     matchedPairs.clear()
-                    // Локальная карта для хранения ссылок на кнопки выбранных пар:
+                    // Локальная карта для хранения ссылок на кнопки выбранных пар
                     val matchedButtons = mutableMapOf<String, Pair<Button, Button>>()
 
                     val horizontalContainer = LinearLayout(requireContext()).apply {
@@ -394,7 +499,7 @@ class ExerciseQuestionsFragment : Fragment() {
                         ).apply { setMargins(horizontalMargin, 0, 0, 0) }
                     }
 
-                    // Создаём кнопки для левого ряда
+                    // Создаём кнопки для левого ряда с возможностью отмены выбора/сопоставления
                     leftItems.forEach { leftItem ->
                         val leftButton = Button(requireContext()).apply {
                             text = leftItem
@@ -418,16 +523,37 @@ class ExerciseQuestionsFragment : Fragment() {
                                 requireContext().dpToPx(8)
                             )
                             setOnClickListener {
-                                // Выбираем левую кнопку (очищаем предыдущий выбор, если есть)
+                                val leftKey = tag as String
+                                // Если кнопка уже выбрана как активная – отменяем выбор
+                                if (selectedLeftButton == this) {
+                                    selectedLeftButton = null
+                                    setBackgroundResource(R.drawable.button_unselected)
+                                    Log.d("MatchingPairs", "Отмена выбора левого элемента: $leftKey")
+                                    return@setOnClickListener
+                                }
+                                // Если кнопка уже участвует в сопоставлении – удаляем существующую пару
+                                if (matchedPairs.containsKey(leftKey)) {
+                                    matchedPairs.remove(leftKey)
+                                    matchedButtons[leftKey]?.let { pair ->
+                                        pair.first.setBackgroundResource(R.drawable.button_unselected)
+                                        pair.second.setBackgroundResource(R.drawable.button_unselected)
+                                        matchedButtons.remove(leftKey)
+                                        Log.d("MatchingPairs", "Удалено сопоставление для левого элемента: $leftKey")
+                                    }
+                                    btnNext.visibility = if (matchedPairs.size == leftItems.size) View.VISIBLE else View.GONE
+                                    return@setOnClickListener
+                                }
+                                // Устанавливаем данную кнопку как активную для сопоставления
                                 selectedLeftButton?.setBackgroundResource(R.drawable.button_unselected)
                                 selectedLeftButton = this
                                 setBackgroundResource(R.drawable.button_selected)
+                                Log.d("MatchingPairs", "Выбран левый элемент: $leftKey")
                             }
                         }
                         leftContainer.addView(leftButton)
                     }
 
-                    // Создаём кнопки для правого ряда
+                    // Создаём кнопки для правого ряда с возможностью отмены сопоставления
                     rightItems.forEach { rightItem ->
                         val rightButton = Button(requireContext()).apply {
                             text = rightItem
@@ -451,21 +577,51 @@ class ExerciseQuestionsFragment : Fragment() {
                                 requireContext().dpToPx(8)
                             )
                             setOnClickListener {
-                                if (selectedLeftButton == null) {
-                                    Toast.makeText(requireContext(), "Выберите элемент слева", Toast.LENGTH_SHORT).show()
-                                    return@setOnClickListener
+                                val rightValue = tag as String
+                                // Проверяем, существует ли уже сопоставление для этой правой кнопки
+                                var alreadyPairedLeft: String? = null
+                                for ((leftKey, pair) in matchedButtons) {
+                                    if (pair.second == this) {
+                                        alreadyPairedLeft = leftKey
+                                        break
+                                    }
                                 }
-                                val leftValue = selectedLeftButton?.tag as? String
-                                val rightValue = tag as? String
-                                if (leftValue != null && rightValue != null) {
-                                    // Сохраняем выбранную пару и сохраняем ссылки на кнопки
+                                if (selectedLeftButton == null) {
+                                    // Если активного левого выбора нет, а кнопка уже сопоставлена – отменяем сопоставление
+                                    if (alreadyPairedLeft != null) {
+                                        matchedPairs.remove(alreadyPairedLeft)
+                                        matchedButtons[alreadyPairedLeft]?.let { pair ->
+                                            pair.first.setBackgroundResource(R.drawable.button_unselected)
+                                            pair.second.setBackgroundResource(R.drawable.button_unselected)
+                                            matchedButtons.remove(alreadyPairedLeft)
+                                            Log.d("MatchingPairs", "Отмена сопоставления правого элемента: $rightValue, ранее связанного с левым: $alreadyPairedLeft")
+                                        }
+                                        btnNext.visibility = if (matchedPairs.size == leftItems.size) View.VISIBLE else View.GONE
+                                    } else {
+                                        Toast.makeText(requireContext(), "Выберите элемент слева", Toast.LENGTH_SHORT).show()
+                                    }
+                                    return@setOnClickListener
+                                } else {
+                                    // Если активный левый выбран, создаём новое сопоставление
+                                    val leftValue = selectedLeftButton?.tag as String
+                                    // Если выбранный правый элемент уже был сопоставлен – сначала удаляем старую пару
+                                    if (alreadyPairedLeft != null) {
+                                        matchedPairs.remove(alreadyPairedLeft)
+                                        matchedButtons[alreadyPairedLeft]?.let { pair ->
+                                            pair.first.setBackgroundResource(R.drawable.button_unselected)
+                                            pair.second.setBackgroundResource(R.drawable.button_unselected)
+                                            matchedButtons.remove(alreadyPairedLeft)
+                                            Log.d("MatchingPairs", "Переназначение: правый элемент $rightValue ранее был связан с левым $alreadyPairedLeft")
+                                        }
+                                    }
+                                    // Сохраняем новое сопоставление
                                     matchedPairs[leftValue] = rightValue
                                     matchedButtons[leftValue] = Pair(selectedLeftButton!!, this)
-                                    // Обновляем визуальное выделение для выбранной пары
+                                    // Обновляем визуальное выделение для сопоставленной пары
                                     selectedLeftButton?.setBackgroundResource(R.drawable.button_selected)
                                     this.setBackgroundResource(R.drawable.button_selected)
+                                    Log.d("MatchingPairs", "Сопоставлено: левый элемент $leftValue с правым элементом $rightValue")
                                     selectedLeftButton = null
-                                    // Если сопоставлены все пары, делаем кнопку "Следующий" видимой
                                     btnNext.visibility = if (matchedPairs.size == leftItems.size) View.VISIBLE else View.GONE
                                 }
                             }
@@ -490,83 +646,78 @@ class ExerciseQuestionsFragment : Fragment() {
         val currentQuestion = questions[currentQuestionIndex]
         when (currentQuestion.type_id) {
             1 -> {
-                // Одиночный выбор (без изменений)
+                // Одиночный выбор
                 if (selectedAnswer != null) {
                     try {
                         val response = exercisesService.checkAnswer(
                             currentQuestion.uuid,
                             SingleAnswer(selectedAnswer!!)
                         )
-                        if (response.isSuccessful && response.body()?.correct == true) {
-                            correctAnswersCount++
+                        if (response.isSuccessful) {
+                            val body = response.body()
+                            Log.d("ServerCheck", "Ответ с сервера (одиночный): $body")
+                            if (body?.correct == true) {
+                                correctAnswersCount++
+                                Log.d("ServerCheck", "Ответ правильный")
+                            } else {
+                                Log.d("ServerCheck", "Ответ неправильный")
+                                // Можно вывести корректный ответ, если сервер его возвращает
+                            }
                         }
                     } catch (e: Exception) {
-                        Log.e("ExerciseQuestions", "Exception while checking answer", e)
+                        Log.e("ExerciseQuestions", "Ошибка при проверке одиночного ответа", e)
                     }
                 }
             }
             2 -> {
-                // Множественный выбор (без изменений)
+                // Множественный выбор
                 if (selectedAnswers.isNotEmpty()) {
                     try {
                         val response = exercisesService.checkAnswer(
                             currentQuestion.uuid,
                             MultipleAnswer(selectedAnswers.toList())
                         )
-                        if (response.isSuccessful && response.body()?.correct == true) {
-                            correctAnswersCount++
+                        if (response.isSuccessful) {
+                            val body = response.body()
+                            Log.d("ServerCheck", "Ответ с сервера (множественный): $body")
+                            if (body?.correct == true) {
+                                correctAnswersCount++
+                                Log.d("ServerCheck", "Ответ правильный")
+                            } else {
+                                Log.d("ServerCheck", "Ответ неправильный")
+                            }
                         }
                     } catch (e: Exception) {
-                        Log.e("ExerciseQuestions", "Exception while checking multiple answer", e)
+                        Log.e("ExerciseQuestions", "Ошибка при проверке множественного ответа", e)
                     }
                 }
             }
+// В методе processAndCheckAnswerForCurrentQuestion для type_id == 3:
             3 -> {
-                val leftItems = questions[currentQuestionIndex].matching?.leftSide.orEmpty()
-                if (matchedPairs.size != leftItems.size) {
-                    Toast.makeText(requireContext(), "Сопоставьте все пары", Toast.LENGTH_SHORT).show()
-                    return
-                }
-                // Формируем корректное сопоставление для сравнения
-                val correctMapping = mutableMapOf<String, String>()
-                leftItems.forEachIndexed { index, leftItem ->
-                    val correctRight = questions[currentQuestionIndex].matching?.rightSide?.getOrNull(index) ?: ""
-                    correctMapping[leftItem] = correctRight
-                }
-                var allCorrect = true
-                // Проверяем каждую пару
-                for ((left, userRight) in matchedPairs) {
-                    if (correctMapping[left] != userRight) {
-                        // Подсвечиваем неверную пару красным.
-                        // Для этого, если у вас сохранены ссылки на кнопки (например, в matchedButtons),
-                        // можно установить для них фон ошибки:
-                        // matchedButtons[left]?.first?.setBackgroundResource(R.drawable.button_error)
-                        // matchedButtons[left]?.second?.setBackgroundResource(R.drawable.button_error)
-                        allCorrect = false
-                    }
-                }
-                if (allCorrect) {
-                    // Отправляем ответ на сервер
-                    try {
-                        val response = exercisesService.checkAnswer(
-                            currentQuestion.uuid,
-                            MatchingAnswer(matchedPairs)
-                        )
-                        if (response.isSuccessful && response.body()?.correct == true) {
+                val leftItems = currentQuestion.matching?.leftSide.orEmpty()
+                // Проверяем, что пользователь сопоставил все элементы
+                // Отправляем ответ на сервер без локальной проверки правильности
+                try {
+                    val response = exercisesService.checkAnswer(
+                        currentQuestion.uuid,
+                        MatchingAnswer(answer = matchedPairs)
+                    )
+                    if (response.isSuccessful) {
+                        val body = response.body()
+                        Log.d("ServerCheck", "Ответ с сервера (сопоставление): $body")
+                        if (body?.correct == true) {
                             correctAnswersCount++
+                            Log.d("ServerCheck", "Ответ правильный")
+                        } else {
+                            Log.d("ServerCheck", "Ответ неправильный")
                         }
-                    } catch (e: Exception) {
-                        Log.e("ExerciseQuestions", "Exception while checking matching answer", e)
                     }
-                    // Если ответ верный, можно, например, очистить UI или перейти к следующему вопросу
-                } else {
-                    Toast.makeText(requireContext(), "Есть ошибки в сопоставлении", Toast.LENGTH_SHORT).show()
-                    // Неверные пары остаются подсвеченными красным, чтобы пользователь мог их исправить.
+                } catch (e: Exception) {
+                    Log.e("ExerciseQuestions", "Ошибка при проверке ответа для сопоставления", e)
                 }
             }
         }
     }
-
     fun Context.dpToPx(dp: Int): Int {
         return (dp * resources.displayMetrics.density).toInt()
     }

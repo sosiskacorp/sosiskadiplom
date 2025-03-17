@@ -8,5 +8,5 @@ data class Lesson(
     val difficulty: Difficulty,
     val order: Int,
     val course_uuid: String,
-    val exercises: List<Any>? // Можно заменить на конкретную модель, если потребуется
+    val exercises: List<Exercise>?
 )

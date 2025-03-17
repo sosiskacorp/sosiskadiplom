@@ -11,6 +11,7 @@ data class Question(
     val exercise_uuid: String,
     @SerializedName("question_options")
     val questionOptions: List<QuestionOption>? = null,
+    @SerializedName("matching")
     val matching: Matching? = null,
     val images: List<QuestionImage>? = null
 )
