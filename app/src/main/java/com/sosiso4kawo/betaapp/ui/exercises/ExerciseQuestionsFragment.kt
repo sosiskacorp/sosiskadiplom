@@ -137,40 +137,20 @@ class ExerciseQuestionsFragment : Fragment() {
 
     private suspend fun handleNextExercise(lessonId: String, currentExerciseId: String) {
         Log.d("NextExercise", "Начало обработки. Текущий exercise UUID: $currentExerciseId")
-
         try {
             val response = lessonsService.getLessonContent(lessonId)
-            Log.d("NextExercise", "Получен ответ от сервера. Успешно: ${response.isSuccessful}")
-
             if (response.isSuccessful) {
-                Log.d("NextExercise", "Тело ответа: ${response.body()}")
-
-                response.body()?.let { lessons ->
-                    Log.d("NextExercise", "Количество уроков в ответе: ${lessons.size}")
-
-                    val lessonWithExercises = lessons.firstOrNull { it.exercises != null }
-                    if (lessonWithExercises == null) {
-                        Log.e("NextExercise", "Уроки не содержат упражнений")
-                        return@let
-                    }
-
-                    lessonWithExercises.exercises?.let { exercises ->
-                        Log.d("NextExercise", "Найдено упражнений: ${exercises.size}")
-
-                        val sortedExercises = exercises.sortedBy { it.order }
-                        Log.d("NextExercise", "Отсортированные упражнения: ${sortedExercises.joinToString { it.uuid }}")
-
-                        val currentIndex = sortedExercises.indexOfFirst { it.uuid == currentExerciseId }
-                        Log.d("NextExercise", "Индекс текущего упражнения: $currentIndex")
-
-                        if (currentIndex != -1 && currentIndex < sortedExercises.lastIndex) {
-                            val nextExercise = sortedExercises[currentIndex + 1]
-                            Log.d("NextExercise", "Следующее упражнение UUID: ${nextExercise.uuid}")
-                            navigateToExercise(nextExercise.uuid, lessonId)
-                        } else {
-                            Log.d("NextExercise", "Текущее упражнение последнее в списке")
-                            showFinalMessageAndNavigate()
-                        }
+                response.body()?.let { exercisesList ->
+                    Log.d("NextExercise", "Получено упражнений: ${exercisesList.size}")
+                    val sortedExercises = exercisesList.sortedBy { it.order }
+                    val currentIndex = sortedExercises.indexOfFirst { it.uuid == currentExerciseId }
+                    if (currentIndex != -1 && currentIndex < sortedExercises.lastIndex) {
+                        val nextExercise = sortedExercises[currentIndex + 1]
+                        Log.d("NextExercise", "Следующее упражнение UUID: ${nextExercise.uuid}")
+                        navigateToExercise(nextExercise.uuid, lessonId)
+                    } else {
+                        Log.d("NextExercise", "Текущее упражнение последнее в уроке")
+                        showFinalMessageAndNavigate()
                     }
                 } ?: run {
                     Log.e("NextExercise", "Пустое тело ответа")
@@ -182,7 +162,6 @@ class ExerciseQuestionsFragment : Fragment() {
             }
         } catch (e: Exception) {
             Log.e("NextExercise", "Исключение: ${e.javaClass.simpleName}", e)
-            Log.e("NextExercise", "Сообщение об ошибке: ${e.message}")
             navigateToHome()
         }
     }
