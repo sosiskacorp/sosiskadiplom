@@ -12,4 +12,12 @@
     <string name="avatar_description">Аватар пользователя</string>
     <string name="avatar">Avatar</string>
     <string name="course">Курс</string>
+    <string name="lesson_completed">Урок завершён</string>
+    <string name="points_earned">Получено поинтов: %1$d</string>
+    <string name="correct_percentage">Правильных ответов: %1$d%%</string>
+    <string name="time_spent">Затраченное время: %1$s</string>
+    <string name="finish_level">Завершить уровень</string>
+    <string name="points_earned_placeholder">Получено поинтов: 0</string>
+    <string name="correct_percentage_placeholder">Правильных ответов: 0%</string>
+    <string name="time_spent_placeholder">Затраченное время: 00:00</string>
 </resources>

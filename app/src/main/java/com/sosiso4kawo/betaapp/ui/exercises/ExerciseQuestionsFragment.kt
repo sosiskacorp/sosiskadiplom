@@ -41,6 +41,10 @@ class ExerciseQuestionsFragment : Fragment() {
     private var questions: List<Question> = emptyList()
     private var currentQuestionIndex = 0
     private var correctAnswersCount = 0
+    private var aggregatedCorrectAnswers: Int = 0
+    private var aggregatedQuestionsCount: Int = 0
+    private var aggregatedTimeMillis: Long = 0L
+    private var startTime: Long = 0L
 
     // Для одиночного выбора
     private var selectedAnswer: String? = null
@@ -61,6 +65,12 @@ class ExerciseQuestionsFragment : Fragment() {
         super.onCreate(savedInstanceState)
         exerciseUuid = arguments?.getString("exerciseUuid")
         lessonUuid = arguments?.getString("lessonUuid")
+        aggregatedCorrectAnswers = arguments?.getInt("aggregatedCorrectAnswers", 0) ?: 0
+        aggregatedQuestionsCount = arguments?.getInt("aggregatedQuestionsCount", 0) ?: 0
+        aggregatedTimeMillis = arguments?.getLong("aggregatedTimeMillis", 0L) ?: 0L
+
+        Log.d("ExerciseQuestions", "exerciseUuid = $exerciseUuid, lessonUuid = $lessonUuid")
+        Log.d("ExerciseQuestions", "Начальные агрегированные значения: correct=$aggregatedCorrectAnswers, questions=$aggregatedQuestionsCount, time=$aggregatedTimeMillis")
     }
 
     override fun onCreateView(
@@ -91,6 +101,7 @@ class ExerciseQuestionsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        startTime = System.currentTimeMillis()
         btnNext = binding.btnNext
         tvQuestionText = binding.tvQuestionText
         ivQuestionImage = binding.ivQuestionImage
@@ -101,24 +112,49 @@ class ExerciseQuestionsFragment : Fragment() {
         btnNext.setOnClickListener {
             lifecycleScope.launch {
                 processAndCheckAnswerForCurrentQuestion()
-
-                // Убедитесь, что currentQuestionIndex обновляется корректно
                 if (currentQuestionIndex < questions.size - 1) {
                     currentQuestionIndex++
                     displayCurrentQuestion()
                 } else {
-                    Log.d("Navigation", "Все вопросы пройдены. Проверка следующего упражнения...")
+                    val exerciseTimeSpent = System.currentTimeMillis() - startTime
+                    val newAggregatedCorrect = aggregatedCorrectAnswers + correctAnswersCount
+                    val newAggregatedQuestions = aggregatedQuestionsCount + questions.size
+                    val newAggregatedTime = aggregatedTimeMillis + exerciseTimeSpent
 
-                    // Добавьте явный вызов handleNextExercise
                     lessonUuid?.let { lessonId ->
                         exerciseUuid?.let { currentExerciseId ->
-                            handleNextExercise(lessonId, currentExerciseId)
+                            try {
+                                val response = lessonsService.getLessonContent(lessonId)
+                                if (response.isSuccessful && response.body() != null) {
+                                    val exercisesList = response.body()!!.sortedBy { it.order }
+                                    val currentIndex = exercisesList.indexOfFirst { it.uuid == currentExerciseId }
+                                    if (currentIndex != -1 && currentIndex < exercisesList.lastIndex) {
+                                        val nextExercise = exercisesList[currentIndex + 1]
+                                        val bundle = Bundle().apply {
+                                            putString("exerciseUuid", nextExercise.uuid)
+                                            putString("lessonUuid", lessonId)
+                                            putInt("aggregatedCorrectAnswers", newAggregatedCorrect)
+                                            putInt("aggregatedQuestionsCount", newAggregatedQuestions)
+                                            putLong("aggregatedTimeMillis", newAggregatedTime)
+                                        }
+                                        navigateToExercise(bundle)
+                                    } else {
+                                        navigateToLessonComplete(newAggregatedCorrect, newAggregatedQuestions, newAggregatedTime)
+                                    }
+                                } else {
+                                    Log.e("ExerciseQuestions", "Ошибка при получении списка упражнений")
+                                    navigateToHome()
+                                }
+                            } catch (e: Exception) {
+                                Log.e("ExerciseQuestions", "Исключение: ${e.message}")
+                                navigateToHome()
+                            }
                         } ?: run {
-                            Log.e("Navigation", "exerciseUuid is null")
+                            Log.e("ExerciseQuestions", "exerciseUuid is null")
                             navigateToHome()
                         }
                     } ?: run {
-                        Log.e("Navigation", "lessonUuid is null")
+                        Log.e("ExerciseQuestions", "lessonUuid is null")
                         navigateToHome()
                     }
                 }
@@ -127,76 +163,30 @@ class ExerciseQuestionsFragment : Fragment() {
         loadQuestions()
     }
 
-    private fun showCompletionDialog(correctCount: Int) {
-        AlertDialog.Builder(requireContext())
-            .setTitle("Тест завершён")
-            .setMessage("Правильных ответов: $correctCount из ${questions.size}")
-            .setPositiveButton("OK") { _, _ -> }
-            .show()
-    }
-
-    private suspend fun handleNextExercise(lessonId: String, currentExerciseId: String) {
-        Log.d("NextExercise", "Начало обработки. Текущий exercise UUID: $currentExerciseId")
-        try {
-            val response = lessonsService.getLessonContent(lessonId)
-            if (response.isSuccessful) {
-                response.body()?.let { exercisesList ->
-                    Log.d("NextExercise", "Получено упражнений: ${exercisesList.size}")
-                    val sortedExercises = exercisesList.sortedBy { it.order }
-                    val currentIndex = sortedExercises.indexOfFirst { it.uuid == currentExerciseId }
-                    if (currentIndex != -1 && currentIndex < sortedExercises.lastIndex) {
-                        val nextExercise = sortedExercises[currentIndex + 1]
-                        Log.d("NextExercise", "Следующее упражнение UUID: ${nextExercise.uuid}")
-                        navigateToExercise(nextExercise.uuid, lessonId)
-                    } else {
-                        Log.d("NextExercise", "Текущее упражнение последнее в уроке")
-                        showFinalMessageAndNavigate()
-                    }
-                } ?: run {
-                    Log.e("NextExercise", "Пустое тело ответа")
-                    navigateToHome()
-                }
-            } else {
-                Log.e("NextExercise", "Ошибка сервера: ${response.errorBody()?.string()}")
-                navigateToHome()
-            }
-        } catch (e: Exception) {
-            Log.e("NextExercise", "Исключение: ${e.javaClass.simpleName}", e)
-            navigateToHome()
+    private fun navigateToLessonComplete(totalCorrect: Int, totalQuestions: Int, totalTimeMillis: Long) {
+        val correctPercentage = if (totalQuestions > 0) (totalCorrect * 100) / totalQuestions else 0
+        val points = totalCorrect * 10  // например, 10 поинтов за правильный ответ
+        val timeSpent = formatTime(totalTimeMillis)
+        val bundle = Bundle().apply {
+            putInt("points", points)
+            putInt("correctPercentage", correctPercentage)
+            putString("timeSpent", timeSpent)
         }
+        findNavController().navigate(R.id.action_exerciseQuestionsFragment_to_lessonCompleteFragment, bundle)
     }
 
-    private fun showFinalMessageAndNavigate() {
-        Toast.makeText(
-            requireContext(),
-            "Это последнее упражнение в уроке",
-            Toast.LENGTH_LONG
-        ).show()
-        navigateToHome()
+    private fun navigateToExercise(bundle: Bundle) {
+        findNavController().navigate(R.id.action_exerciseQuestionsFragment_to_exerciseDetailFragment, bundle)
     }
 
-    private fun navigateToExercise(exerciseUuid: String, lessonUuid: String) {
-        try {
-            Handler(Looper.getMainLooper()).postDelayed({
-                if (findNavController().currentDestination?.id == R.id.exerciseQuestionsFragment) {
-                    findNavController().navigate(
-                        R.id.action_exerciseQuestionsFragment_to_exerciseDetailFragment,
-                        Bundle().apply {
-                            putString("exerciseUuid", exerciseUuid)
-                            putString("lessonUuid", lessonUuid)
-                        }
-                    )
-                }
-            }, 1500)
-        } catch (e: Exception) {
-            Log.e("Navigation", "Error navigating: ${e.message}")
-        }
+    private fun formatTime(timeMillis: Long): String {
+        val seconds = (timeMillis / 1000) % 60
+        val minutes = (timeMillis / 1000) / 60
+        return String.format("%02d:%02d", minutes, seconds)
     }
 
     private fun navigateToHome() {
-        Handler(Looper.getMainLooper()).postDelayed({
-            findNavController().navigate(R.id.action_exerciseQuestionsFragment_to_home)
-        }, 1500)
+        findNavController().navigate(R.id.action_exerciseQuestionsFragment_to_home)
     }
 
     private fun loadQuestions() {
