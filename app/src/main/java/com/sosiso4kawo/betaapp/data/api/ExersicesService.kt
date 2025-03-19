@@ -1,4 +1,3 @@
-
 package com.sosiso4kawo.betaapp.data.api
 
 import com.sosiso4kawo.betaapp.data.model.Exercise

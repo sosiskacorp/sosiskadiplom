@@ -137,15 +137,39 @@
             android:name="exerciseUuid"
             app:argType="string" />
         <action
-            android:id="@+id/action_exerciseQuestionsFragment_to_home"
-            app:destination="@id/navigation_home"
-            app:popUpTo="@id/exerciseQuestionsFragment"
-            app:popUpToInclusive="true" />
-        <action
             android:id="@+id/action_exerciseQuestionsFragment_to_exerciseDetailFragment"
             app:destination="@id/exerciseDetailFragment"
             app:popUpTo="@id/exerciseDetailFragment"
             app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_exerciseQuestionsFragment_to_home"
+            app:destination="@id/navigation_home"
+            app:popUpTo="@id/exerciseQuestionsFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/lessonCompletionFragment"
+        android:name="com.sosiso4kawo.betaapp.ui.lessons.LessonCompletionFragment"
+        android:label="Итог урока"
+        tools:layout="@layout/fragment_lesson_completion">
+        <argument
+            android:name="totalPoints"
+            app:argType="integer" />
+        <argument
+            android:name="correctAnswers"
+            app:argType="integer" />
+        <argument
+            android:name="totalQuestions"
+            app:argType="integer" />
+        <argument
+            android:name="timeSpent"
+            app:argType="long" />
+        <action
+            android:id="@+id/action_lessonCompletionFragment_to_home"
+            app:destination="@id/navigation_home"
+            app:popUpTo="@id/navigation_home"
+            app:popUpToInclusive="true"/>
     </fragment>
 
 </navigation>

@@ -17,6 +17,7 @@ import android.view.Window
 import android.widget.*
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
@@ -25,6 +26,8 @@ import com.sosiso4kawo.betaapp.data.api.ExercisesService
 import com.sosiso4kawo.betaapp.data.api.LessonsService
 import com.sosiso4kawo.betaapp.data.model.*
 import com.sosiso4kawo.betaapp.databinding.FragmentExerciseQuestionsBinding
+import com.sosiso4kawo.betaapp.ui.lessons.LessonCompletionFragment
+import com.sosiso4kawo.betaapp.ui.lessons.LessonResultViewModel
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
@@ -35,6 +38,8 @@ class ExerciseQuestionsFragment : Fragment() {
 
     private val exercisesService: ExercisesService by inject()
     private val lessonsService: LessonsService by inject()
+
+    private val lessonResultViewModel: LessonResultViewModel by activityViewModels()
 
     private var exerciseUuid: String? = null
     private var lessonUuid: String? = null // Новая переменная для идентификатора урока
@@ -61,6 +66,10 @@ class ExerciseQuestionsFragment : Fragment() {
         super.onCreate(savedInstanceState)
         exerciseUuid = arguments?.getString("exerciseUuid")
         lessonUuid = arguments?.getString("lessonUuid")
+        // Если это начало урока, зафиксировать время старта
+        if (lessonResultViewModel.lessonStartTime == 0L) {
+            lessonResultViewModel.lessonStartTime = System.currentTimeMillis()
+        }
     }
 
     override fun onCreateView(
@@ -102,14 +111,15 @@ class ExerciseQuestionsFragment : Fragment() {
             lifecycleScope.launch {
                 processAndCheckAnswerForCurrentQuestion()
 
-                // Убедитесь, что currentQuestionIndex обновляется корректно
+                // Агрегируем данные текущего упражнения в shared ViewModel:
+                lessonResultViewModel.aggregatedCorrectAnswers += correctAnswersCount
+                lessonResultViewModel.aggregatedTotalQuestions += questions.size
+                lessonResultViewModel.aggregatedPoints += calculatePointsForExercise()
+
                 if (currentQuestionIndex < questions.size - 1) {
                     currentQuestionIndex++
                     displayCurrentQuestion()
                 } else {
-                    Log.d("Navigation", "Все вопросы пройдены. Проверка следующего упражнения...")
-
-                    // Добавьте явный вызов handleNextExercise
                     lessonUuid?.let { lessonId ->
                         exerciseUuid?.let { currentExerciseId ->
                             handleNextExercise(lessonId, currentExerciseId)
@@ -127,30 +137,22 @@ class ExerciseQuestionsFragment : Fragment() {
         loadQuestions()
     }
 
-    private fun showCompletionDialog(correctCount: Int) {
-        AlertDialog.Builder(requireContext())
-            .setTitle("Тест завершён")
-            .setMessage("Правильных ответов: $correctCount из ${questions.size}")
-            .setPositiveButton("OK") { _, _ -> }
-            .show()
-    }
 
     private suspend fun handleNextExercise(lessonId: String, currentExerciseId: String) {
-        Log.d("NextExercise", "Начало обработки. Текущий exercise UUID: $currentExerciseId")
         try {
             val response = lessonsService.getLessonContent(lessonId)
             if (response.isSuccessful) {
                 response.body()?.let { exercisesList ->
-                    Log.d("NextExercise", "Получено упражнений: ${exercisesList.size}")
                     val sortedExercises = exercisesList.sortedBy { it.order }
                     val currentIndex = sortedExercises.indexOfFirst { it.uuid == currentExerciseId }
                     if (currentIndex != -1 && currentIndex < sortedExercises.lastIndex) {
                         val nextExercise = sortedExercises[currentIndex + 1]
-                        Log.d("NextExercise", "Следующее упражнение UUID: ${nextExercise.uuid}")
                         navigateToExercise(nextExercise.uuid, lessonId)
                     } else {
-                        Log.d("NextExercise", "Текущее упражнение последнее в уроке")
-                        showFinalMessageAndNavigate()
+                        // Если это последнее упражнение, вычисляем общее время и переходим к итоговому экрану
+                        val totalTime = (System.currentTimeMillis() - lessonResultViewModel.lessonStartTime) / 1000
+                        // Можно сохранить время в ViewModel, если нужно
+                        navigateToLessonCompletion(totalTime)
                     }
                 } ?: run {
                     Log.e("NextExercise", "Пустое тело ответа")
@@ -166,37 +168,49 @@ class ExerciseQuestionsFragment : Fragment() {
         }
     }
 
-    private fun showFinalMessageAndNavigate() {
-        Toast.makeText(
-            requireContext(),
-            "Это последнее упражнение в уроке",
-            Toast.LENGTH_LONG
-        ).show()
-        navigateToHome()
+
+    private fun navigateToLessonCompletion(totalTime: Long) {
+        val bundle = Bundle().apply {
+            putInt(LessonCompletionFragment.ARG_TOTAL_POINTS, lessonResultViewModel.aggregatedPoints)
+            putInt(LessonCompletionFragment.ARG_CORRECT_ANSWERS, lessonResultViewModel.aggregatedCorrectAnswers)
+            putInt(LessonCompletionFragment.ARG_TOTAL_QUESTIONS, lessonResultViewModel.aggregatedTotalQuestions)
+            putLong(LessonCompletionFragment.ARG_TIME_SPENT, totalTime)
+        }
+        findNavController().navigate(R.id.lessonCompletionFragment, bundle)
     }
 
     private fun navigateToExercise(exerciseUuid: String, lessonUuid: String) {
-        try {
-            Handler(Looper.getMainLooper()).postDelayed({
-                if (findNavController().currentDestination?.id == R.id.exerciseQuestionsFragment) {
-                    findNavController().navigate(
-                        R.id.action_exerciseQuestionsFragment_to_exerciseDetailFragment,
-                        Bundle().apply {
-                            putString("exerciseUuid", exerciseUuid)
-                            putString("lessonUuid", lessonUuid)
-                        }
-                    )
-                }
-            }, 1500)
-        } catch (e: Exception) {
-            Log.e("Navigation", "Error navigating: ${e.message}")
-        }
+        Handler(Looper.getMainLooper()).postDelayed({
+            if (findNavController().currentDestination?.id == R.id.exerciseQuestionsFragment) {
+                findNavController().navigate(
+                    R.id.action_exerciseQuestionsFragment_to_exerciseDetailFragment,
+                    Bundle().apply {
+                        putString("exerciseUuid", exerciseUuid)
+                        putString("lessonUuid", lessonUuid)
+                    }
+                )
+            }
+        }, 1500)
     }
 
     private fun navigateToHome() {
         Handler(Looper.getMainLooper()).postDelayed({
             findNavController().navigate(R.id.action_exerciseQuestionsFragment_to_home)
         }, 1500)
+    }
+
+    private suspend fun calculatePointsForExercise(): Int {
+        exerciseUuid?.let { uuid ->
+            val response = exercisesService.getExercise(uuid)
+            if (response.isSuccessful && response.body() != null) {
+                val exercise = response.body()!!
+                val maxPoints = exercise.points
+                // Если количество правильных ответов равно числу вопросов,
+                // значит упражнение пройдено полностью правильно и начисляются все поинты.
+                return if (correctAnswersCount == questions.size) maxPoints else 0
+            }
+        }
+        return 0
     }
 
     private fun loadQuestions() {
