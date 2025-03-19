@@ -21,6 +21,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
+import com.google.gson.Gson
 import com.sosiso4kawo.betaapp.R
 import com.sosiso4kawo.betaapp.data.api.ExercisesService
 import com.sosiso4kawo.betaapp.data.api.LessonsService
@@ -35,6 +36,7 @@ class ExerciseQuestionsFragment : Fragment() {
 
     private var _binding: FragmentExerciseQuestionsBinding? = null
     private val binding get() = _binding!!
+    private var sessionId: String? = null
 
     private val exercisesService: ExercisesService by inject()
     private val lessonsService: LessonsService by inject()
@@ -109,11 +111,11 @@ class ExerciseQuestionsFragment : Fragment() {
 
         btnNext.setOnClickListener {
             lifecycleScope.launch {
-                processAndCheckAnswerForCurrentQuestion()
+                val isAnswerCorrect = processAndCheckAnswerForCurrentQuestion()
 
-                // Агрегируем данные текущего упражнения в shared ViewModel:
-                lessonResultViewModel.aggregatedCorrectAnswers += correctAnswersCount
-                lessonResultViewModel.aggregatedTotalQuestions += questions.size
+                // Если вам не нужно отдельно проверять, можно просто положиться на корректное обновление correctAnswersCount
+                lessonResultViewModel.aggregatedCorrectAnswers += if (isAnswerCorrect) 1 else 0
+                lessonResultViewModel.aggregatedTotalQuestions++  // Добавляем один вопрос за раз
                 lessonResultViewModel.aggregatedPoints += calculatePointsForExercise()
 
                 if (currentQuestionIndex < questions.size - 1) {
@@ -139,19 +141,40 @@ class ExerciseQuestionsFragment : Fragment() {
 
 
     private suspend fun handleNextExercise(lessonId: String, currentExerciseId: String) {
+        sessionId?.let { sessionId ->
+            val finishRequest = FinishAttemptRequest(
+                correct_answers = correctAnswersCount,
+                is_finished = true,
+                questions = questions.size
+            )
+
+            try {
+                val finishResponse = exercisesService.finishAttempt(sessionId, finishRequest)
+
+                if (finishResponse.isSuccessful) {
+                    finishResponse.body()?.lessons?.let {
+                        lessonResultViewModel.aggregatedCorrectAnswers += it.sumOf { it.total_points }
+                    } ?: Log.e("API", "Отсутствуют данные lessons в ответе")
+                } else {
+                    Log.e("API", "Ошибка завершения: ${finishResponse.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                Log.e("API", "Ошибка завершения попытки", e)
+            }
+        }
+
         try {
             val response = lessonsService.getLessonContent(lessonId)
             if (response.isSuccessful) {
                 response.body()?.let { exercisesList ->
                     val sortedExercises = exercisesList.sortedBy { it.order }
                     val currentIndex = sortedExercises.indexOfFirst { it.uuid == currentExerciseId }
+
                     if (currentIndex != -1 && currentIndex < sortedExercises.lastIndex) {
                         val nextExercise = sortedExercises[currentIndex + 1]
                         navigateToExercise(nextExercise.uuid, lessonId)
                     } else {
-                        // Если это последнее упражнение, вычисляем общее время и переходим к итоговому экрану
                         val totalTime = (System.currentTimeMillis() - lessonResultViewModel.lessonStartTime) / 1000
-                        // Можно сохранить время в ViewModel, если нужно
                         navigateToLessonCompletion(totalTime)
                     }
                 } ?: run {
@@ -167,7 +190,6 @@ class ExerciseQuestionsFragment : Fragment() {
             navigateToHome()
         }
     }
-
 
     private fun navigateToLessonCompletion(totalTime: Long) {
         val bundle = Bundle().apply {
@@ -205,6 +227,7 @@ class ExerciseQuestionsFragment : Fragment() {
             if (response.isSuccessful && response.body() != null) {
                 val exercise = response.body()!!
                 val maxPoints = exercise.points
+                Log.d("Points", "correctAnswersCount: $correctAnswersCount, totalQuestions: ${questions.size}, maxPoints: $maxPoints")
                 // Если количество правильных ответов равно числу вопросов,
                 // значит упражнение пройдено полностью правильно и начисляются все поинты.
                 return if (correctAnswersCount == questions.size) maxPoints else 0
@@ -218,8 +241,20 @@ class ExerciseQuestionsFragment : Fragment() {
             Toast.makeText(requireContext(), "Неверный идентификатор упражнения", Toast.LENGTH_SHORT).show()
             return
         }
+
         lifecycleScope.launch {
             try {
+                // Начинаем новую попытку
+                val startResponse = exercisesService.startAttempt(exerciseUuid!!)
+
+                if (!startResponse.isSuccessful || startResponse.body() == null) {
+                    Toast.makeText(requireContext(), "Не удалось начать попытку: ${startResponse.message()}", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+
+                sessionId = startResponse.body()!!.session_id
+
+                // Загружаем вопросы
                 val response = exercisesService.getExerciseQuestions(exerciseUuid!!)
                 if (response.isSuccessful) {
                     response.body()?.let { questionList ->
@@ -234,10 +269,11 @@ class ExerciseQuestionsFragment : Fragment() {
                         Toast.makeText(requireContext(), "Не удалось загрузить вопросы", Toast.LENGTH_SHORT).show()
                     }
                 } else {
-                    Toast.makeText(requireContext(), "Ошибка загрузки вопросов", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Ошибка загрузки вопросов: ${response.code()}", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+                Log.e("API", "Ошибка при старте попытки", e)
             }
         }
     }
@@ -635,82 +671,50 @@ class ExerciseQuestionsFragment : Fragment() {
         }
     }
 
-    private suspend fun processAndCheckAnswerForCurrentQuestion() {
+    private suspend fun processAndCheckAnswerForCurrentQuestion(): Boolean {
         val currentQuestion = questions[currentQuestionIndex]
-        when (currentQuestion.type_id) {
-            1 -> {
-                // Одиночный выбор
-                if (selectedAnswer != null) {
-                    try {
-                        val response = exercisesService.checkAnswer(
-                            currentQuestion.uuid,
-                            SingleAnswer(selectedAnswer!!)
-                        )
-                        if (response.isSuccessful) {
-                            val body = response.body()
-                            Log.d("ServerCheck", "Ответ с сервера (одиночный): $body")
-                            if (body?.correct == true) {
-                                correctAnswersCount++
-                                Log.d("ServerCheck", "Ответ правильный")
-                            } else {
-                                Log.d("ServerCheck", "Ответ неправильный")
-                                // Можно вывести корректный ответ, если сервер его возвращает
-                            }
-                        }
-                    } catch (e: Exception) {
-                        Log.e("ExerciseQuestions", "Ошибка при проверке одиночного ответа", e)
-                    }
-                }
-            }
-            2 -> {
-                // Множественный выбор
-                if (selectedAnswers.isNotEmpty()) {
-                    try {
-                        val response = exercisesService.checkAnswer(
-                            currentQuestion.uuid,
-                            MultipleAnswer(selectedAnswers.toList())
-                        )
-                        if (response.isSuccessful) {
-                            val body = response.body()
-                            Log.d("ServerCheck", "Ответ с сервера (множественный): $body")
-                            if (body?.correct == true) {
-                                correctAnswersCount++
-                                Log.d("ServerCheck", "Ответ правильный")
-                            } else {
-                                Log.d("ServerCheck", "Ответ неправильный")
-                            }
-                        }
-                    } catch (e: Exception) {
-                        Log.e("ExerciseQuestions", "Ошибка при проверке множественного ответа", e)
-                    }
-                }
-            }
-// В методе processAndCheckAnswerForCurrentQuestion для type_id == 3:
-            3 -> {
-                val leftItems = currentQuestion.matching?.leftSide.orEmpty()
-                // Проверяем, что пользователь сопоставил все элементы
-                // Отправляем ответ на сервер без локальной проверки правильности
-                try {
-                    val response = exercisesService.checkAnswer(
-                        currentQuestion.uuid,
-                        MatchingAnswer(answer = matchedPairs)
-                    )
-                    if (response.isSuccessful) {
-                        val body = response.body()
-                        Log.d("ServerCheck", "Ответ с сервера (сопоставление): $body")
-                        if (body?.correct == true) {
-                            correctAnswersCount++
-                            Log.d("ServerCheck", "Ответ правильный")
-                        } else {
-                            Log.d("ServerCheck", "Ответ неправильный")
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.e("ExerciseQuestions", "Ошибка при проверке ответа для сопоставления", e)
-                }
+        val answerBody = when (currentQuestion.type_id) {
+            1 -> currentQuestion.uuid to selectedAnswer!! // Pair<String, String>
+            2 -> currentQuestion.uuid to selectedAnswers.toList() // Pair<String, List<String>>
+            3 -> currentQuestion.uuid to matchedPairs // Pair<String, Map<String, String>>
+            else -> {
+                Log.e("API", "Неизвестный тип вопроса: ${currentQuestion.type_id}")
+                return false
             }
         }
+
+        sessionId?.let { sessionId ->
+            try {
+                val request = AnswerRequest(
+                    questionId = answerBody.first,
+                    answer = answerBody.second
+                )
+
+                Log.d("API", "Отправляемый JSON: ${Gson().toJson(request)}")
+
+                val response = exercisesService.submitAnswer(sessionId, request)
+
+                if (response.isSuccessful) {
+                    response.body()?.let { body ->
+                        return if (body.correct) {
+                            correctAnswersCount++  // Увеличиваем счетчик при верном ответе
+                            Log.d("API", "Ответ верный: $body")
+                            true
+                        } else {
+                            Log.d("API", "Ответ неверный: $body")
+                            false
+                        }
+                    }
+                } else {
+                    Log.e("API", "Ошибка ${response.code()}: ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                Log.e("API", "Ошибка отправки ответа", e)
+            }
+        }
+        return false
     }
+
     fun Context.dpToPx(dp: Int): Int {
         return (dp * resources.displayMetrics.density).toInt()
     }

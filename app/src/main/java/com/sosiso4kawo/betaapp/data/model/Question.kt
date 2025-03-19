@@ -44,6 +44,7 @@ data class QuestionImage(
 
 // Новая модель для проверки ответа
 data class CheckResponse(
+    @SerializedName("is_correct")
     val correct: Boolean,
     val message: String? = null
 )
@@ -58,5 +59,6 @@ data class MultipleAnswer(
 )
 
 data class MatchingAnswer(
+    @SerializedName("answer")
     val answer: Map<String, String>
 )

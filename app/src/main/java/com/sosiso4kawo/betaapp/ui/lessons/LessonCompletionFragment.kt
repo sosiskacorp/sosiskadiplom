@@ -60,7 +60,6 @@ class LessonCompletionFragment : Fragment() {
 
         // Вычисляем процент правильных ответов
         val percentCorrect = if (totalQuestions > 0) (correctAnswers * 100 / totalQuestions) else 0
-
         // Обновляем UI
         binding.tvLessonStatus.text = "Урок завершён"
         binding.tvPoints.text = "Получено поинтов: $totalPoints"
