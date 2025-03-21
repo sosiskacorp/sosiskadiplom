@@ -22,4 +22,10 @@
     <dimen name="button_height">56dp</dimen>
     <dimen name="input_field_height">64dp</dimen>
     <dimen name="progress_bar_size">32dp</dimen>
+    <dimen name="progress_bar_width">120dp</dimen>
+    <dimen name="progress_bar_height">8dp</dimen>
+    <dimen name="icon_button_size">48dp</dimen>
+    <dimen name="bottom_nav_height">64dp</dimen>
+    <dimen name="bottom_nav_item_icon_size">24dp</dimen>
+    <dimen name="bottom_nav_item_text_size">12sp</dimen>
 </resources>

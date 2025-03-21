@@ -63,6 +63,7 @@ dependencies {
     implementation(libs.glide)
     implementation(libs.okhttp)
     implementation(libs.ucrop)
+    implementation(libs.androidx.material3)
     annotationProcessor(libs.compiler)
 
     testImplementation(libs.junit)

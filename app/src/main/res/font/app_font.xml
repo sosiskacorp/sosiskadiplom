@@ -6,9 +6,9 @@
     <font
         android:font="@font/gothica1_light"
         android:fontStyle="normal"
-        android:fontWeight="400"
+        android:fontWeight="500"
         app:font="@font/gothica1_light"
         app:fontStyle="normal"
-        app:fontWeight="400" />
+        app:fontWeight="500" />
     
 </font-family>

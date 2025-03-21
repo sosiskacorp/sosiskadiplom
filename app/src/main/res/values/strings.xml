@@ -19,4 +19,9 @@
     <string name="email_hint">Email</string>
     <string name="confirm_password_hint">Подтвердите пароль</string>
     <string name="login">Логин</string>
+    <string name="general_progress">Общий прогресс</string>
+    <string name="accessibility_back">Назад</string>
+    <string name="accessibility_close">Закрыть</string>
+    <string name="accessibility_edit_profile">Редактировать профиль</string>
+    <string name="accessibility_notifications">Уведомления</string>
 </resources>

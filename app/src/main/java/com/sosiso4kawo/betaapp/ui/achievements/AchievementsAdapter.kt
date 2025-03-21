@@ -27,25 +27,31 @@ class AchievementsAdapter : ListAdapter<Achievement, AchievementsAdapter.Achieve
         private val tvTitle: TextView = itemView.findViewById(R.id.tvTitle)
         private val tvDescription: TextView = itemView.findViewById(R.id.tvDescription)
         private val ivCompleted: ImageView = itemView.findViewById(R.id.ivCompleted)
+        private val overlay: View = itemView.findViewById(R.id.overlay)
 
         fun bind(achievement: Achievement) {
             tvTitle.text = achievement.title
             tvDescription.text = achievement.description
 
             if (achievement.achieved == true) {
+                overlay.visibility = View.VISIBLE
                 ivCompleted.visibility = View.VISIBLE
-                itemView.setBackgroundColor(Color.parseColor("#F97316"))
+                tvTitle.alpha = 0.4f
+                tvDescription.alpha = 0.4f
             } else {
+                overlay.visibility = View.GONE
                 ivCompleted.visibility = View.GONE
-                itemView.setBackgroundColor(Color.WHITE)
+                tvTitle.alpha = 1f
+                tvDescription.alpha = 1f
             }
 
-            // Делаем элемент квадратным
+            // Make square aspect ratio
             itemView.post {
                 val width = itemView.width
-                if (itemView.layoutParams.height != width) {
-                    itemView.layoutParams.height = width
-                    itemView.requestLayout()
+                val params = itemView.layoutParams
+                if (params.height != width) {
+                    params.height = width
+                    itemView.layoutParams = params
                 }
             }
         }
@@ -56,6 +62,6 @@ class AchievementsAdapter : ListAdapter<Achievement, AchievementsAdapter.Achieve
             oldItem.id == newItem.id
 
         override fun areContentsTheSame(oldItem: Achievement, newItem: Achievement): Boolean =
-            oldItem.achieved == newItem.achieved && oldItem.current_count == newItem.current_count
+            oldItem == newItem
     }
 }

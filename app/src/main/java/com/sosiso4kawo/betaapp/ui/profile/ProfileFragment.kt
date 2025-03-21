@@ -138,7 +138,7 @@ class ProfileFragment : Fragment(), KoinComponent {
                             val progressResponse = result.value
 
                             // Считаем общий прогресс
-                            val totalPoints = progressResponse.courses.sumOf { it.total_points }
+                            val totalPoints = progressResponse.lessons.sumOf { it.total_points }
                             val completedCoursesCount = progressResponse.courses.size
 
                             // Обновляем текст в соответствующих TextView

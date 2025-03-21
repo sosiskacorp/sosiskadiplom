@@ -1,25 +1,25 @@
 [versions]
 agp = "8.8.2"
-glide = "4.15.1"
-gridlayout = "1.0.0"
-kotlin = "1.9.24"
+glide = "4.16.0"
+kotlin = "2.1.0"
 coreKtx = "1.15.0"
-retrofit = "2.9.0"
-koin = "3.5.3"
-coroutines = "1.7.3"
+retrofit = "2.11.0"
+koin = "4.0.2"
+coroutines = "1.10.1"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 appcompat = "1.7.0"
 material = "1.12.0"
-constraintlayout = "2.2.0"
+constraintlayout = "2.2.1"
 lifecycleLivedataKtx = "2.8.7"
 lifecycleViewmodelKtx = "2.8.7"
-navigationFragmentKtx = "2.8.6"
-navigationUiKtx = "2.8.6"
+navigationFragmentKtx = "2.8.9"
+navigationUiKtx = "2.8.9"
 gridlayoutVersion = "1.1.0-beta01"
 okhttp = "5.0.0-alpha.14"
 ucrop = "2.2.10"
+material3 = "1.4.0-alpha10"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -43,6 +43,7 @@ koin-androidx-navigation = { group = "io.insert-koin", name = "koin-androidx-nav
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 ucrop = { group = "com.github.yalantis", name = "ucrop", version.ref = "ucrop" }
+androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

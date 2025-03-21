@@ -1,23 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Brand colors -->
     <color name="orange">#F97316</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
-    <color name="black">#FF000000</color>
+    <color name="teal_200">#F97316</color>
+    <color name="teal_700">#F97316</color>
+
+    <!-- Basic colors -->
     <color name="white">#FFFFFFFF</color>
-    
-    <!-- Custom header colors -->
+    <color name="black">#FF000000</color>
+
+    <!-- Header colors -->
     <color name="header_home">#F97316</color>
     <color name="header_rating">#F97316</color>
     <color name="header_achievements">#F97316</color>
     <color name="header_profile">#F97316</color>
 
-    <!-- Streak circle colors -->
-    <color name="streak_circle_background">#F97316</color>
-    <color name="streak_text_color">#FFFFFFFF</color>
+    <!-- Surface colors -->
+    <color name="surface">#FFFFFFFF</color>
+    <color name="surface_variant">#FFECE5</color>
+    <color name="on_surface">#FF1B1B1B</color>
+    <color name="colorOnSurfaceVariant">#FF424242</color>
 
-    <color name="text_color_primary">?android:attr/textColorPrimary</color>
-    <color name="text_color_secondary">?android:attr/textColorSecondary</color>
-    <color name="surface">@color/white</color>
+    <!-- Primary colors -->
+    <color name="primary_container">#FFE9D7</color>
+    <color name="on_primary_container">#FF2A1700</color>
+
+    <!-- Secondary colors -->
+    <color name="secondary_container">#F97316</color>
+    <color name="on_secondary_container">#FFFFFFFF</color>
+
+    <!-- Error colors -->
     <color name="error">#B00020</color>
+    <color name="error_container">#FFDAD6</color>
+
+    <!-- Special cases -->
+    <color name="streak_circle_background">@color/orange</color>
+    <color name="streak_text_color">@color/white</color>
+
+    <!-- Добавить в конец файла -->
+    <color name="dark_gray">#404040</color>
+    <color name="light_gray">#D3D3D3</color>
 </resources>

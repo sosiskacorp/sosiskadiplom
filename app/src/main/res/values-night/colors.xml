@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand colors -->
+    <color name="orange">#F97316</color>
+    <color name="teal_200">#F97316</color>
+    <color name="teal_700">#F97316</color>
+
+    <!-- Basic colors -->
+    <color name="white">#E0E0E0</color>
+    <color name="black">#212121</color>
+
+    <!-- Header colors (оставляем оригинальные значения) -->
+    <color name="header_home">#F97316</color>
+    <color name="header_rating">#F97316</color>
+    <color name="header_achievements">#F97316</color>
+    <color name="header_profile">#F97316</color>
+
+    <!-- Surface colors -->
+    <color name="surface">#FF1B1B1B</color>
+    <color name="surface_variant">#FF2F2B25</color>
+    <color name="on_surface">#FFE4E4E4</color>
+    <color name="colorOnSurfaceVariant">#FFE0E0E0</color>
+
+    <!-- Primary colors -->
+    <color name="primary_container">#FF3F2600</color>
+    <color name="on_primary_container">#FFE9D7</color>
+
+    <!-- Secondary colors -->
+    <color name="secondary_container">#FF004F49</color>
+    <color name="on_secondary_container">#FFB2F0EA</color>
+
+    <!-- Error colors -->
+    <color name="error">#FFB4A9</color>
+    <color name="error_container">#930006</color>
+
+    <!-- Special cases -->
+    <color name="streak_text_color">@color/on_primary_container</color>
+
+    <!-- Добавить в конец файла -->
+    <color name="dark_gray">#616161</color>
+    <color name="light_gray">#B0B0B0</color>
+</resources>
