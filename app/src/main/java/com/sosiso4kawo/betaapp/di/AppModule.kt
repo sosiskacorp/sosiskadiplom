@@ -11,7 +11,9 @@ import com.sosiso4kawo.betaapp.data.api.UserService
 import com.sosiso4kawo.betaapp.data.repository.AuthRepository
 import com.sosiso4kawo.betaapp.data.repository.UserRepository
 import com.sosiso4kawo.betaapp.network.AuthInterceptor
+import com.sosiso4kawo.betaapp.network.NavigationListener
 import com.sosiso4kawo.betaapp.ui.auth.AuthViewModel
+import com.sosiso4kawo.betaapp.ui.home.HomeFragment
 import com.sosiso4kawo.betaapp.util.SessionManager
 import okhttp3.OkHttpClient
 import org.koin.android.ext.koin.androidContext
@@ -23,11 +25,12 @@ import retrofit2.converter.gson.GsonConverterFactory
 val appModule = module {
     // SessionManager с контекстом приложения
     single { SessionManager(androidContext()) }
+    single<NavigationListener> { HomeFragment() }
 
     // OkHttpClient с AuthInterceptor
     single {
         OkHttpClient.Builder()
-            .addInterceptor(AuthInterceptor(get()))
+            .addInterceptor(AuthInterceptor(get(), get()))
             .build()
     }
 

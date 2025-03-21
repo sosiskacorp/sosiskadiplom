@@ -3,19 +3,22 @@ package com.sosiso4kawo.betaapp.network
 import android.util.Log
 import com.sosiso4kawo.betaapp.data.repository.AuthRepository
 import com.sosiso4kawo.betaapp.util.SessionManager
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.firstOrNull
 import okhttp3.Interceptor
 import okhttp3.Response
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 
 class AuthInterceptor(
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val navigationListener: NavigationListener
 ) : Interceptor, KoinComponent {
 
     companion object {
         @Volatile
         private var isRefreshing = false
+        private const val BACKOFF_TIME = 1000L  // начальная задержка (1 секунда)
     }
 
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -37,25 +40,10 @@ class AuthInterceptor(
                 if (!isRefreshing) {
                     isRefreshing = true
                     runBlocking {
-                        sessionManager.getRefreshToken()?.let { refreshToken ->
-                            val authRepository: AuthRepository = get()
-                            authRepository.refreshToken(refreshToken).collect { result ->
-                                result.onSuccess { authResponse ->
-                                    // Если expiresIn не пришёл, используем значение по умолчанию (например, 3600 сек)
-                                    val expiresIn = authResponse.expiresIn ?: (48 * 3600L)
-                                    sessionManager.saveTokens(
-                                        authResponse.access_token,
-                                        authResponse.refresh_token,
-                                        expiresIn
-                                    )
-                                    Log.d("AuthInterceptor", "Токен успешно обновлён.")
-                                }
-                                result.onFailure { exception ->
-                                    Log.e("AuthInterceptor", "Ошибка обновления токена: ${exception.message}")
-                                    logout()
-                                }
-                            }
-                        } ?: run {
+                        try {
+                            handleTokenRefresh()
+                        } catch (e: Exception) {
+                            Log.e("AuthInterceptor", "Ошибка обновления токена: ${e.message}")
                             logout()
                         }
                     }
@@ -63,7 +51,7 @@ class AuthInterceptor(
                 } else {
                     // Если обновление уже идёт – можно подождать небольшой интервал
                     // до появления нового токена, или просто продолжить с устаревшим
-                    Thread.sleep(500)
+                    Thread.sleep(BACKOFF_TIME)
                 }
             }
         }
@@ -86,30 +74,16 @@ class AuthInterceptor(
                 if (!isRefreshing) {
                     isRefreshing = true
                     runBlocking {
-                        sessionManager.getRefreshToken()?.let { refreshToken ->
-                            val authRepository: AuthRepository = get()
-                            authRepository.refreshToken(refreshToken).collect { result ->
-                                result.onSuccess { authResponse ->
-                                    val expiresIn = authResponse.expiresIn ?: (48 * 3600L)
-                                    sessionManager.saveTokens(
-                                        authResponse.access_token,
-                                        authResponse.refresh_token,
-                                        expiresIn
-                                    )
-                                    Log.d("AuthInterceptor", "Токен обновлён после 401.")
-                                }
-                                result.onFailure { exception ->
-                                    Log.e("AuthInterceptor", "Ошибка обновления токена после 401: ${exception.message}")
-                                    logout()
-                                }
-                            }
-                        } ?: run {
+                        try {
+                            handleTokenRefresh()
+                        } catch (e: Exception) {
+                            Log.e("AuthInterceptor", "Ошибка обновления токена после 401: ${e.message}")
                             logout()
                         }
                     }
                     isRefreshing = false
                 } else {
-                    Thread.sleep(500)
+                    Thread.sleep(BACKOFF_TIME)
                 }
             }
             sessionManager.getAccessToken()?.let { token ->
@@ -123,9 +97,48 @@ class AuthInterceptor(
         return response
     }
 
+    // Обработчик обновления токена
+    private suspend fun handleTokenRefresh() {
+        val refreshToken = sessionManager.getRefreshToken()
+        if (refreshToken != null) {
+            val authRepository: AuthRepository = get()
+            try {
+                val result = authRepository.refreshToken(refreshToken).firstOrNull() // Получаем результат запроса
+                if (result != null && result.isSuccess) {
+                    // Извлекаем успешный результат
+                    val authResponse = result.getOrNull()
+                    if (authResponse != null) {
+                        // Если expiresIn не приходит, устанавливаем срок жизни refresh token равным 7 дням (604800 секунд)
+                        val expiresIn = authResponse.expiresIn ?: (7 * 24 * 3600L)
+                        sessionManager.saveTokens(
+                            authResponse.access_token,
+                            authResponse.refresh_token,
+                            expiresIn
+                        )
+
+                        Log.d("AuthInterceptor", "Токен успешно обновлён.")
+                    } else {
+                        Log.e("AuthInterceptor", "Не удалось получить токен.")
+                        logout()
+                    }
+                } else {
+                    Log.e("AuthInterceptor", "Ошибка обновления токена: ${result?.exceptionOrNull()?.message}")
+                    logout()
+                }
+            } catch (e: Exception) {
+                Log.e("AuthInterceptor", "Ошибка обновления токена: ${e.message}")
+                logout()
+            }
+        } else {
+            logout()
+        }
+    }
+
     // Очистка сессии (логаут) – можно добавить уведомление или навигацию на экран логина
     private fun logout() {
         Log.d("AuthInterceptor", "Токены недействительны или истекли, выполняем логаут.")
         sessionManager.clearSession()
+
+        navigationListener.navigateToLogin()
     }
 }

@@ -4,10 +4,12 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavOptions
@@ -18,11 +20,11 @@ import com.sosiso4kawo.betaapp.databinding.FragmentProfileBinding
 import com.sosiso4kawo.betaapp.data.repository.UserRepository
 import com.sosiso4kawo.betaapp.ui.auth.AuthUiState
 import com.sosiso4kawo.betaapp.ui.auth.AuthViewModel
+import com.sosiso4kawo.betaapp.util.Result
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import com.sosiso4kawo.betaapp.util.Result
 
 class ProfileFragment : Fragment(), KoinComponent {
 
@@ -58,6 +60,9 @@ class ProfileFragment : Fragment(), KoinComponent {
 
         // Загружаем данные профиля
         loadProfile()
+
+        // Загружаем прогресс пользователя
+        loadProgress()
 
         // Обработчик нажатия кнопки "Выйти из аккаунта"
         binding.logoutButton.setOnClickListener {
@@ -115,6 +120,35 @@ class ProfileFragment : Fragment(), KoinComponent {
                             Toast.makeText(
                                 context,
                                 "Ошибка загрузки профиля: ${result.exception.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun loadProgress() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                userRepository.getProgress().collect { result ->
+                    when (result) {
+                        is Result.Success -> {
+                            val progressResponse = result.value
+
+                            // Считаем общий прогресс
+                            val totalPoints = progressResponse.courses.sumOf { it.total_points }
+                            val completedCoursesCount = progressResponse.courses.size
+
+                            // Обновляем текст в соответствующих TextView
+                            binding.tvTotalPoints.text = "Всего поинтов: $totalPoints"
+                            binding.tvCompletedCourses.text = "Пройденных курсов: $completedCoursesCount"
+                        }
+                        is Result.Failure -> {
+                            Toast.makeText(
+                                context,
+                                "Ошибка загрузки прогресса: ${result.exception.message}",
                                 Toast.LENGTH_SHORT
                             ).show()
                         }

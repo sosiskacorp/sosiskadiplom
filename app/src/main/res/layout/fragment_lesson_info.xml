@@ -15,7 +15,7 @@
 
     <TextView
         android:id="@+id/tvLessonDescription"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Описание урока"
         android:layout_marginTop="8dp" />
@@ -24,8 +24,7 @@
         android:id="@+id/btnStartLesson"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Начать урок"
-        android:layout_marginTop="16dp" />
+        android:text="Начать урок" />
 
     <Button
         android:id="@+id/btnClose"

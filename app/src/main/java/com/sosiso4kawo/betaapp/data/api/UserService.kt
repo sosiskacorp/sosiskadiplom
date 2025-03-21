@@ -3,6 +3,7 @@ package com.sosiso4kawo.betaapp.data.api
 import com.sosiso4kawo.betaapp.data.model.UpdateProfileRequest
 import com.sosiso4kawo.betaapp.data.model.User
 import com.sosiso4kawo.betaapp.data.model.UsersResponse
+import com.sosiso4kawo.betaapp.data.model.ProgressResponse
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
@@ -44,5 +45,7 @@ interface UserService {
         @Header("Authorization") token: String
     ): Response<User>
 
-
+    // Новый метод для получения прогресса пользователя
+    @GET("v1/users/me/progress")
+    suspend fun getProgress(@Header("Authorization") token: String): Response<ProgressResponse>
 }

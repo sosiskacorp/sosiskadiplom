@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="12dp"
+    android:background="@drawable/orange_border"
+    android:baselineAligned="false">
+
+    <!-- Название (например, название курса или идентификатор) -->
+    <TextView
+        android:id="@+id/tvProgressTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Название"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:maxLines="2"
+        android:ellipsize="end"
+        android:paddingEnd="8dp"/>
+
+    <!-- Отображение баллов -->
+    <TextView
+        android:id="@+id/tvPoints"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0 поинтов"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    <!-- Кнопка для показа информации о прогрессе -->
+    <Button
+        android:id="@+id/btnInfo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Инфо"
+        android:layout_marginStart="8dp"/>
+</LinearLayout>

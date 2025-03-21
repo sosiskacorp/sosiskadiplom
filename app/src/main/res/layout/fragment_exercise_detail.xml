@@ -37,12 +37,5 @@
             android:layout_height="wrap_content"
             android:text="Загрузить вопросы"
             android:layout_marginTop="16dp" />
-
-        <TextView
-            android:id="@+id/tvQuestions"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Список вопросов"
-            android:layout_marginTop="8dp" />
     </LinearLayout>
 </ScrollView>

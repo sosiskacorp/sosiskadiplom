@@ -65,7 +65,7 @@ class LessonInfoDialogFragment : DialogFragment() {
                 if (response.isSuccessful) {
                     response.body()?.let { lessonInfo ->
                         tvTitle.text = lessonInfo.title
-                        tvDescription.text = lessonInfo.description
+                        tvDescription.text = lessonInfo.description.replace("\\n", "\n")
                     }
                 } else {
                     tvTitle.text = "Ошибка загрузки"

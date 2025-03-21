@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -36,6 +37,48 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/avatarImageView" />
+
+    <!-- Блок прогресса с обводкой -->
+    <LinearLayout
+        android:id="@+id/progressContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:layout_marginHorizontal="24dp"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:background="@drawable/orange_border"
+        app:layout_constraintTop_toBottomOf="@id/userFullName"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Заголовок блока прогресса -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Общий прогресс"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="?attr/colorPrimary"
+            android:layout_marginBottom="12dp"/>
+
+        <!-- Количество поинтов -->
+        <TextView
+            android:id="@+id/tvTotalPoints"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Всего поинтов: 0"
+            android:textSize="16sp"
+            android:layout_marginBottom="8dp"/>
+
+        <!-- Количество пройденных курсов -->
+        <TextView
+            android:id="@+id/tvCompletedCourses"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Пройденных курсов: 0"
+            android:textSize="16sp"/>
+    </LinearLayout>
 
     <!-- Кнопка выхода -->
     <com.google.android.material.button.MaterialButton

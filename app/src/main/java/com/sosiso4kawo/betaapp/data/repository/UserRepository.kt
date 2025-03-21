@@ -4,12 +4,15 @@ import com.sosiso4kawo.betaapp.data.api.UserService
 import android.util.Log
 import com.google.gson.GsonBuilder
 import com.sosiso4kawo.betaapp.data.model.AuthError
+import com.sosiso4kawo.betaapp.data.model.ProgressResponse
 import com.sosiso4kawo.betaapp.data.model.UpdateProfileRequest
 import com.sosiso4kawo.betaapp.data.model.User
 import com.sosiso4kawo.betaapp.util.Result
 import com.sosiso4kawo.betaapp.util.SessionManager
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import okhttp3.MultipartBody
 import retrofit2.Response
 
@@ -170,6 +173,20 @@ class UserRepository(
             emit(com.sosiso4kawo.betaapp.util.Result.Failure(e))
         }
     }
+
+    fun getProgress(): Flow<Result<ProgressResponse>> = flow {
+        val token = sessionManager.getAccessToken()
+        if (token != null) {
+            val response = userService.getProgress("Bearer $token")
+            if (response.isSuccessful && response.body() != null) {
+                emit(Result.Success(response.body()!!))
+            } else {
+                emit(Result.Failure(Exception("Ошибка загрузки прогресса")))
+            }
+        } else {
+            emit(Result.Failure(Exception("Нет токена авторизации")))
+        }
+    }.flowOn(Dispatchers.IO)
 
     suspend fun getUserByUuid(uuid: String) = flow {
         try {

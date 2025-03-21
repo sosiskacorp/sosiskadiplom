@@ -29,7 +29,6 @@ class ExerciseDetailFragment : Fragment() {
     private lateinit var tvExerciseDescription: TextView
     private lateinit var tvExercisePoints: TextView
     private lateinit var btnLoadQuestions: Button
-    private lateinit var tvQuestions: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,7 +46,6 @@ class ExerciseDetailFragment : Fragment() {
         tvExerciseDescription = view.findViewById(R.id.tvExerciseDescription)
         tvExercisePoints = view.findViewById(R.id.tvExercisePoints)
         btnLoadQuestions = view.findViewById(R.id.btnLoadQuestions)
-        tvQuestions = view.findViewById(R.id.tvQuestions)
 
         loadExerciseInfo()
 
@@ -67,7 +65,7 @@ class ExerciseDetailFragment : Fragment() {
                 if (response.isSuccessful) {
                     response.body()?.let { exercise: Exercise ->
                         tvExerciseTitle.text = exercise.title
-                        tvExerciseDescription.text = exercise.description
+                        tvExerciseDescription.text = exercise.description.replace("\\n", "\n")
                         tvExercisePoints.text = "${exercise.points} points"
                     }
                 } else {
@@ -77,22 +75,4 @@ class ExerciseDetailFragment : Fragment() {
         }
     }
 
-    private fun loadExerciseQuestions() {
-        exerciseUuid?.let { uuid ->
-            lifecycleScope.launch {
-                val response = exercisesService.getExerciseQuestions(uuid)
-                if (response.isSuccessful) {
-                    val questions: List<Question> = response.body() ?: emptyList()
-                    // Выводим список вопросов – можно реализовать кастомное отображение вместо простого текста
-                    val questionsText = questions.sortedBy { it.order }
-                        .joinToString(separator = "\n") { question ->
-                            "${question.order}. ${question.text} (${question.type.title})"
-                        }
-                    tvQuestions.text = questionsText
-                } else {
-                    tvQuestions.text = "Ошибка загрузки вопросов"
-                }
-            }
-        }
-    }
 }
