@@ -8,4 +8,18 @@
     <dimen name="level_button_elevation">4dp</dimen> <!-- Увеличил возвышение для лучшего визуального эффекта -->
     <dimen name="level_button_margin">8dp</dimen>
     <dimen name="bottom_padding">72dp</dimen>
+
+    <!-- Base sizes -->
+    <dimen name="padding_small">8dp</dimen>
+    <dimen name="padding_medium">16dp</dimen>
+    <dimen name="padding_large">24dp</dimen>
+
+    <!-- Text sizes -->
+    <dimen name="text_size_body">16sp</dimen>
+    <dimen name="text_size_title">24sp</dimen>
+
+    <!-- Component sizes -->
+    <dimen name="button_height">56dp</dimen>
+    <dimen name="input_field_height">64dp</dimen>
+    <dimen name="progress_bar_size">32dp</dimen>
 </resources>

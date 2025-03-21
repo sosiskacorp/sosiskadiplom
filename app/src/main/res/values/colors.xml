@@ -15,4 +15,9 @@
     <!-- Streak circle colors -->
     <color name="streak_circle_background">#F97316</color>
     <color name="streak_text_color">#FFFFFFFF</color>
+
+    <color name="text_color_primary">?android:attr/textColorPrimary</color>
+    <color name="text_color_secondary">?android:attr/textColorSecondary</color>
+    <color name="surface">@color/white</color>
+    <color name="error">#B00020</color>
 </resources>
