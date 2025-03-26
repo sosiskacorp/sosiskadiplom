@@ -7,7 +7,6 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.google.android.material.card.MaterialCardView
-import android.view.ViewGroup.MarginLayoutParams
 import com.sosiso4kawo.betaapp.R
 
 class LevelButtonView @JvmOverloads constructor(

@@ -12,16 +12,13 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.sosiso4kawo.betaapp.R
 import com.sosiso4kawo.betaapp.data.api.ExercisesService
-import com.sosiso4kawo.betaapp.data.api.LessonsService
 import com.sosiso4kawo.betaapp.data.model.Exercise
-import com.sosiso4kawo.betaapp.data.model.Question
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
 class ExerciseDetailFragment : Fragment() {
 
     private val exercisesService: ExercisesService by inject()
-    private val lessonsService: LessonsService by inject()
     private var exerciseUuid: String? = null
     private var lessonUuid: String? = null
 

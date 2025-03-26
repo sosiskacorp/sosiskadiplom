@@ -64,6 +64,7 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.ucrop)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.preference.ktx)
     annotationProcessor(libs.compiler)
 
     testImplementation(libs.junit)

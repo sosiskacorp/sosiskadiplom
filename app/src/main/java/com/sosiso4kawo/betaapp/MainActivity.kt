@@ -2,10 +2,8 @@ package com.sosiso4kawo.betaapp
 
 import android.os.Bundle
 import android.view.View
-import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
-import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupWithNavController
 import androidx.lifecycle.lifecycleScope
@@ -16,7 +14,7 @@ import com.sosiso4kawo.betaapp.util.SessionManager
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : BaseActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private val userRepository: UserRepository by inject()

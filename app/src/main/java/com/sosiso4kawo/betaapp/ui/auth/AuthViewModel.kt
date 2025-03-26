@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sosiso4kawo.betaapp.data.model.AuthResponse
 import com.sosiso4kawo.betaapp.data.repository.AuthRepository
-import com.sosiso4kawo.betaapp.data.repository.UserRepository
 import com.sosiso4kawo.betaapp.util.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,8 +12,7 @@ import kotlinx.coroutines.launch
 
 class AuthViewModel(
     private val repository: AuthRepository,
-    private val sessionManager: SessionManager,
-    private val userRepository: UserRepository
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Initial)

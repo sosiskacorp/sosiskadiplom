@@ -24,7 +24,7 @@ class UserRepository(
     /**
      * Получает данные профиля пользователя.
      */
-    suspend fun getProfile(): Flow<Result<User>> = flow {
+    fun getProfile(): Flow<Result<User>> = flow {
         try {
             Log.d("UserRepository", "Fetching user profile")
             val accessToken = sessionManager.getAccessToken()
@@ -95,7 +95,7 @@ class UserRepository(
     /**
      * Обновляет данные профиля пользователя.
      */
-    suspend fun updateProfile(request: UpdateProfileRequest): Flow<Result<Unit>> = flow {
+    fun updateProfile(request: UpdateProfileRequest): Flow<Result<Unit>> = flow {
         try {
             Log.d("UserRepository", "Updating user profile")
             val accessToken = sessionManager.getAccessToken()
@@ -154,7 +154,7 @@ class UserRepository(
         return userService.uploadAvatar(token, file)
     }
 
-    suspend fun getAllUsers(limit: Int, offset: Int) = kotlinx.coroutines.flow.flow {
+    fun getAllUsers(limit: Int, offset: Int) = kotlinx.coroutines.flow.flow {
         try {
             val token = sessionManager.getAccessToken()
             if (token.isNullOrEmpty()) {
@@ -188,7 +188,7 @@ class UserRepository(
         }
     }.flowOn(Dispatchers.IO)
 
-    suspend fun getUserByUuid(uuid: String) = flow {
+    fun getUserByUuid(uuid: String) = flow {
         try {
             val token = sessionManager.getAccessToken()
             if (token.isNullOrEmpty()) {

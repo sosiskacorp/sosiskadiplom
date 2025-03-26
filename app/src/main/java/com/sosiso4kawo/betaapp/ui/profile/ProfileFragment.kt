@@ -1,12 +1,15 @@
 package com.sosiso4kawo.betaapp.ui.profile
 
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.appcompat.widget.SwitchCompat
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
@@ -20,6 +23,7 @@ import com.sosiso4kawo.betaapp.databinding.FragmentProfileBinding
 import com.sosiso4kawo.betaapp.data.repository.UserRepository
 import com.sosiso4kawo.betaapp.ui.auth.AuthUiState
 import com.sosiso4kawo.betaapp.ui.auth.AuthViewModel
+import com.sosiso4kawo.betaapp.ui.settings.FontSettingsBottomSheetFragment
 import com.sosiso4kawo.betaapp.util.Result
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -52,8 +56,48 @@ class ProfileFragment : Fragment(), KoinComponent {
             }
         }
 
+        // Получаем SharedPreferences для сохранения состояния переключателей
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
+
+        // Настраиваем переключатель для тёмной темы
+        val darkThemeSwitch = binding.personalizationContainer.findViewById<androidx.appcompat.widget.SwitchCompat>(R.id.darkThemeSwitch)
+        darkThemeSwitch.isChecked = sharedPreferences.getBoolean("dark_theme_enabled", false)
+        darkThemeSwitch.setOnCheckedChangeListener { _, isChecked ->
+            sharedPreferences.edit().putBoolean("dark_theme_enabled", isChecked).apply()
+            // Применяем тёмную тему
+            if (isChecked) {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+            } else {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+            }
+        }
+
+        // Настраиваем переключатель для звуков
+        val soundSwitch = binding.personalizationContainer.findViewById<androidx.appcompat.widget.SwitchCompat>(R.id.soundSwitch)
+        soundSwitch.isChecked = sharedPreferences.getBoolean("sound_enabled", true)
+        soundSwitch.setOnCheckedChangeListener { _, isChecked ->
+            sharedPreferences.edit().putBoolean("sound_enabled", isChecked).apply()
+            // Пример: выводим сообщение или вызываем метод для управления звуком
+            if (isChecked) {
+                // Включаем звуки (реализуйте свою логику)
+                Toast.makeText(requireContext(), "Звуки включены", Toast.LENGTH_SHORT).show()
+            } else {
+                // Выключаем звуки (реализуйте свою логику)
+                Toast.makeText(requireContext(), "Звуки выключены", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        val fontSizeRow = binding.personalizationContainer.findViewById<View>(R.id.fontSizeRow)
+        fontSizeRow.setOnClickListener {
+            // Здесь открываем BottomSheet для настройки размера шрифта
+            val bottomSheet = FontSettingsBottomSheetFragment()
+            bottomSheet.show(childFragmentManager, "FontSettings")
+        }
+
         return binding.root
     }
+
+
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -157,6 +201,7 @@ class ProfileFragment : Fragment(), KoinComponent {
             }
         }
     }
+
 
     override fun onDestroyView() {
         super.onDestroyView()

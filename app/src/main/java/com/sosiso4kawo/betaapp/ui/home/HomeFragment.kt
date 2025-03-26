@@ -18,7 +18,6 @@ import com.sosiso4kawo.betaapp.data.model.Course
 import com.sosiso4kawo.betaapp.databinding.FragmentHomeBinding
 import com.sosiso4kawo.betaapp.network.AuthInterceptor
 import com.sosiso4kawo.betaapp.network.NavigationListener
-import com.sosiso4kawo.betaapp.ui.course_detail.CourseDetailFragment
 import com.sosiso4kawo.betaapp.ui.courses.CoursesAdapter
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
@@ -100,7 +99,7 @@ class HomeFragment : Fragment(), NavigationListener {
             },
             onInfoClick = { course ->
                 // Отображаем диалог с информацией о курсе (как ранее)
-                androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                AlertDialog.Builder(requireContext())
                     .setTitle(course.title)
                     .setMessage("Описание: ${course.description}\nСложность: ${course.difficulty.title}")
                     .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }

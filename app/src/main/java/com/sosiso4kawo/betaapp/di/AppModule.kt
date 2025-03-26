@@ -44,7 +44,7 @@ val appModule = module {
     // Retrofit с кастомным Gson
     single {
         Retrofit.Builder()
-            .baseUrl("http://176.109.108.209:3211")
+            .baseUrl("http://37.18.102.166:3211")
             .client(get())
             .addConverterFactory(GsonConverterFactory.create(get()))
             .build()
@@ -62,5 +62,5 @@ val appModule = module {
     single { UserRepository(get(), get()) }
 
     // ViewModel
-    viewModel { AuthViewModel(get(), get(), get()) }
+    viewModel { AuthViewModel(get(), get()) }
 }

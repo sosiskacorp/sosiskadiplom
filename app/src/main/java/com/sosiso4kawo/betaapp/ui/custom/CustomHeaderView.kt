@@ -7,7 +7,6 @@ import android.view.View
 import androidx.annotation.ColorRes
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
-import com.sosiso4kawo.betaapp.R
 import com.sosiso4kawo.betaapp.databinding.ViewCustomHeaderBinding
 
 class CustomHeaderView @JvmOverloads constructor(

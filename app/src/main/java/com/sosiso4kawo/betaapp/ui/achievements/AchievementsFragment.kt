@@ -13,11 +13,9 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
-
 import com.sosiso4kawo.betaapp.R
 import com.sosiso4kawo.betaapp.data.api.AchievementsService
 import com.sosiso4kawo.betaapp.data.model.Achievement
-import com.sosiso4kawo.betaapp.data.model.Condition
 import com.sosiso4kawo.betaapp.databinding.FragmentAchievementsBinding
 import com.sosiso4kawo.betaapp.util.SessionManager
 import kotlinx.coroutines.launch

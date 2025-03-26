@@ -48,17 +48,3 @@ data class CheckResponse(
     val correct: Boolean,
     val message: String? = null
 )
-
-// Модели для отправки ответа в зависимости от типа вопроса
-data class SingleAnswer(
-    val answer: String
-)
-
-data class MultipleAnswer(
-    val answer: List<String>
-)
-
-data class MatchingAnswer(
-    @SerializedName("answer")
-    val answer: Map<String, String>
-)

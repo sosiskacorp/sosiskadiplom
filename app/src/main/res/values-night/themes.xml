@@ -13,5 +13,11 @@
         <!-- Status bar -->
         <item name="android:statusBarColor">@color/black</item>
         <item name="android:windowLightStatusBar">false</item>
+
+        <item name="android:fontFamily">@font/app_font</item>
+        <item name="fontFamily">@font/app_font</item>
+
+        <item name="textInputStyle">@style/Widget.BetaApp.TextInputLayout</item>
+        <item name="materialButtonStyle">@style/Widget.BetaApp.Button.Primary</item>
     </style>
 </resources>

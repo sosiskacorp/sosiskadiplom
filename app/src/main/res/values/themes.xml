@@ -27,7 +27,7 @@
         <!-- Status bar -->
         <item name="android:statusBarColor">?attr/colorSurface</item>
         <item name="android:navigationBarColor">?attr/colorSurface</item>
-        <item name="android:windowLightStatusBar" tools:targetApi="m">@bool/is_light_theme</item>
+        <item name="android:windowLightStatusBar" >@bool/is_light_theme</item>
 
         <!-- Typography -->
         <item name="android:fontFamily">@font/app_font</item>

@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.flow
 
 class AuthRepository(private val authService: AuthService, private val sessionManager: SessionManager) {
 
-    suspend fun login(login: String, password: String): Flow<Result<AuthResponse>> = flow {
+    fun login(login: String, password: String): Flow<Result<AuthResponse>> = flow {
         try {
             val request = LoginRequest(login, password)
             Log.d("AuthRepository", "Login request payload: ${com.google.gson.GsonBuilder().setPrettyPrinting().create().toJson(request)}")
@@ -80,7 +80,7 @@ class AuthRepository(private val authService: AuthService, private val sessionMa
         }
     }
 
-    suspend fun register(email: String, password: String): Flow<Result<AuthResponse>> = flow {
+    fun register(email: String, password: String): Flow<Result<AuthResponse>> = flow {
         try {
             val request = RegisterRequest(email, password)
             Log.d("AuthRepository", "Registration request payload: ${com.google.gson.GsonBuilder().setPrettyPrinting().create().toJson(request)}")
@@ -144,7 +144,7 @@ class AuthRepository(private val authService: AuthService, private val sessionMa
         }
     }
 
-    suspend fun refreshToken(refreshToken: String): Flow<Result<AuthResponse>> = flow {
+    fun refreshToken(refreshToken: String): Flow<Result<AuthResponse>> = flow {
         try {
             val request = RefreshTokenRequest(refreshToken)
             Log.d("AuthRepository", "Token refresh request payload: ${com.google.gson.GsonBuilder().setPrettyPrinting().create().toJson(request)}")
@@ -197,7 +197,7 @@ class AuthRepository(private val authService: AuthService, private val sessionMa
         }
     }
 
-    suspend fun logout(): Flow<Result<Unit>> = flow {
+    fun logout(): Flow<Result<Unit>> = flow {
         try {
             Log.d("AuthRepository", "Initiating logout request")
 
