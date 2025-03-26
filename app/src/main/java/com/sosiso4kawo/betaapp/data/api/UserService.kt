@@ -1,5 +1,7 @@
 package com.sosiso4kawo.betaapp.data.api
 
+import com.sosiso4kawo.betaapp.data.model.LeaderboardResponse
+import com.sosiso4kawo.betaapp.data.model.LeaderboardUser
 import com.sosiso4kawo.betaapp.data.model.UpdateProfileRequest
 import com.sosiso4kawo.betaapp.data.model.User
 import com.sosiso4kawo.betaapp.data.model.UsersResponse
@@ -33,11 +35,11 @@ interface UserService {
         @Part file: MultipartBody.Part
     ): Response<Void>
 
-    @GET("v1/users/all")
+    @GET("v1/users/leaderboard")
     suspend fun getAllUsers(
         @Query("limit") limit: Int,
         @Query("offset") offset: Int
-    ): Response<UsersResponse>
+    ): Response<LeaderboardResponse>
 
     @GET("v1/users/{uuid}")
     suspend fun getUserByUuid(

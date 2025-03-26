@@ -24,4 +24,5 @@
     <string name="accessibility_close">Закрыть</string>
     <string name="accessibility_edit_profile">Редактировать профиль</string>
     <string name="accessibility_notifications">Уведомления</string>
+    <string name="points_format">%d points</string>
 </resources>

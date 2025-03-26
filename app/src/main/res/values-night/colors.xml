@@ -8,7 +8,9 @@
     <!-- Basic colors -->
     <color name="white">#E0E0E0</color>
     <color name="black">#212121</color>
-
+    <color name="gold_color">#FFD700</color>
+    <color name="silver_color">#C0C0C0</color>
+    <color name="bronze_color">#CD7F32</color>
     <!-- Header colors (оставляем оригинальные значения) -->
     <color name="header_home">#F97316</color>
     <color name="header_rating">#F97316</color>

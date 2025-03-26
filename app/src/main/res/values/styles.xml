@@ -38,4 +38,11 @@
         <item name="android:textSize">12sp</item>
         <item name="android:fontFamily">@font/app_font</item>
     </style>
+
+    <style name="PodiumTextShadow">
+        <item name="android:shadowColor">#80000000</item>
+        <item name="android:shadowDx">1</item>
+        <item name="android:shadowDy">1</item>
+        <item name="android:shadowRadius">3</item>
+    </style>
 </resources>

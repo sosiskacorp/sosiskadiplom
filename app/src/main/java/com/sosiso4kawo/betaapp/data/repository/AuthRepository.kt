@@ -25,7 +25,7 @@ class AuthRepository(private val authService: AuthService, private val sessionMa
                         sessionManager.saveTokens(
                             accessToken = body.access_token,
                             refreshToken = body.refresh_token,
-                            expiresIn = body.expiresIn ?: (48 * 3600L)
+                            expiresIn = body.expiresIn ?: (7 * 24 * 3600L)
                         )
                         val profileResponse = authService.getProfile("Bearer ${body.access_token}")
                         if (profileResponse.isSuccessful) {

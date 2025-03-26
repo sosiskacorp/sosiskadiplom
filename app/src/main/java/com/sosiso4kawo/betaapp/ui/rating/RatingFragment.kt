@@ -11,7 +11,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.sosiso4kawo.betaapp.R
+import com.sosiso4kawo.betaapp.data.model.LeaderboardUser
 import com.sosiso4kawo.betaapp.data.repository.UserRepository
 import com.sosiso4kawo.betaapp.databinding.FragmentRatingBinding
 import com.sosiso4kawo.betaapp.ui.userdetails.UserDetailsFragment
@@ -32,6 +34,7 @@ class RatingFragment : Fragment() {
     private val pageSize = 20
     private var isLoading = false
     private var isLastPage = false
+    private var allUsers = emptyList<LeaderboardUser>()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -48,52 +51,66 @@ class RatingFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setupRecyclerView()
+        setupPodium()
+        loadInitialData()
+    }
+
+    private fun setupRecyclerView() {
         userAdapter = UserAdapter()
         val layoutManager = LinearLayoutManager(requireContext())
-        binding.usersRecyclerView.layoutManager = layoutManager
-        binding.usersRecyclerView.adapter = userAdapter
-
-        // Reset pagination state when fragment is created
-        currentOffset = 0
-        isLastPage = false
-
-        // Нижний отступ, чтобы последний элемент не наслаивался на navigation bar (например, 72dp)
         binding.usersRecyclerView.apply {
+            this.layoutManager = layoutManager
+            adapter = userAdapter
             clipToPadding = false
             updatePadding(bottom = resources.getDimensionPixelSize(R.dimen.bottom_padding))
         }
 
-        // Устанавливаем идентификатор текущего пользователя для выделения
         sessionManager.getUserData()?.uuid?.let {
             userAdapter.setCurrentUserId(it)
         }
 
-        // Обработка кликов по элементу списка
         userAdapter.onUserClick = { user ->
-            if (user.uuid == sessionManager.getUserData()?.uuid) {
+            if (user.user_uuid == sessionManager.getUserData()?.uuid) {
                 findNavController().navigate(R.id.navigation_profile)
             } else {
                 val bundle = Bundle().apply {
-                    putString(UserDetailsFragment.ARG_USER_UUID, user.uuid)
+                    putString(UserDetailsFragment.ARG_USER_UUID, user.user_uuid)
                 }
                 findNavController().navigate(R.id.action_ratingFragment_to_userDetailsFragment, bundle)
             }
         }
 
-        // Начальная загрузка пользователей
-        loadUsers(currentOffset)
-
-        // Пагинация – дозагрузка при скролле
         binding.usersRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
                 val totalItemCount = layoutManager.itemCount
                 val lastVisibleItem = layoutManager.findLastVisibleItemPosition()
                 if (!isLoading && !isLastPage && totalItemCount <= (lastVisibleItem + 5)) {
-                    loadUsers(currentOffset)
+                    loadMoreData()
                 }
             }
         })
+    }
+
+    private fun setupPodium() {
+        // Initial podium setup with empty views
+        binding.podiumLayout.ivFirstAvatar.setImageResource(R.drawable.placeholder_avatar)
+        binding.podiumLayout.ivSecondAvatar.setImageResource(R.drawable.placeholder_avatar)
+        binding.podiumLayout.ivThirdAvatar.setImageResource(R.drawable.placeholder_avatar)
+    }
+
+    private fun loadInitialData() {
+        currentOffset = 0
+        isLastPage = false
+        allUsers = emptyList()
+        loadUsers(currentOffset)
+    }
+
+    private fun loadMoreData() {
+        if (!isLoading && !isLastPage) {
+            loadUsers(currentOffset)
+        }
     }
 
     private fun loadUsers(offset: Int) {
@@ -102,18 +119,18 @@ class RatingFragment : Fragment() {
             userRepository.getAllUsers(limit = pageSize, offset = offset).collect { result ->
                 when (result) {
                     is Result.Success -> {
-                        var users = result.value
+                        val newUsers = result.value.sortedByDescending { it.total_points ?: 0 }
+
                         if (offset == 0) {
-                            sessionManager.getUserData()?.let { currentUser ->
-                                if (users.none { it.uuid == currentUser.uuid }) {
-                                    users = listOf(currentUser) + users
-                                }
-                            }
-                            userAdapter.updateUsers(users)
+                            allUsers = newUsers
+                            updatePodium()
+                            userAdapter.updateUsers(newUsers.drop(3))
                         } else {
-                            userAdapter.addUsers(users)
+                            allUsers = allUsers + newUsers
+                            userAdapter.addUsers(newUsers)
                         }
-                        if (users.size < pageSize) {
+
+                        if (newUsers.size < pageSize) {
                             isLastPage = true
                         } else {
                             currentOffset += pageSize
@@ -130,6 +147,68 @@ class RatingFragment : Fragment() {
                     }
                 }
             }
+        }
+    }
+
+    private fun updatePodium() {
+        val topUsers = allUsers.take(3)
+        with(binding.podiumLayout) {
+            listOf(firstPlaceContainer, secondPlaceContainer, thirdPlaceContainer).forEach {
+                it.setOnClickListener(null)
+            }
+            topUsers.forEachIndexed { index, user ->
+                when (index) {
+                    0 -> {
+                        Glide.with(this@RatingFragment)
+                            .load(user.avatar)
+                            .circleCrop()
+                            .placeholder(R.drawable.placeholder_avatar)
+                            .error(R.drawable.error_avatar)
+                            .into(ivFirstAvatar)
+                        tvFirstName.text = user.login ?: user.name ?: "Аноним"
+                        tvFirstPoints.text =
+                            getString(R.string.points_format, user.total_points ?: 0)
+                        firstPlaceContainer.setOnClickListener { handlePodiumClick(user) }
+                    }
+
+                    1 -> {
+                        Glide.with(this@RatingFragment)
+                            .load(user.avatar)
+                            .circleCrop()
+                            .placeholder(R.drawable.placeholder_avatar)
+                            .error(R.drawable.error_avatar)
+                            .into(ivSecondAvatar)
+                        tvSecondName.text = user.login ?: user.name ?: "Аноним"
+                        tvSecondPoints.text =
+                            getString(R.string.points_format, user.total_points ?: 0)
+                        secondPlaceContainer.setOnClickListener { handlePodiumClick(user) }
+                    }
+
+                    2 -> {
+                        Glide.with(this@RatingFragment)
+                            .load(user.avatar)
+                            .circleCrop()
+                            .placeholder(R.drawable.placeholder_avatar)
+                            .error(R.drawable.error_avatar)
+                            .into(ivThirdAvatar)
+                        tvThirdName.text = user.login ?: user.name ?: "Аноним"
+                        tvThirdPoints.text =
+                            getString(R.string.points_format, user.total_points ?: 0)
+                        thirdPlaceContainer.setOnClickListener { handlePodiumClick(user) }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun handlePodiumClick(user: LeaderboardUser) {
+        if (user.user_uuid == sessionManager.getUserData()?.uuid) {
+            findNavController().navigate(R.id.navigation_profile)
+        } else {
+            val bundle = Bundle().apply {
+                putString(UserDetailsFragment.ARG_USER_UUID, user.user_uuid)
+            }
+            findNavController().navigate(R.id.action_ratingFragment_to_userDetailsFragment, bundle)
         }
     }
 

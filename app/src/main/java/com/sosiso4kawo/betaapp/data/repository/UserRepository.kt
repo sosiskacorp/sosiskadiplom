@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.flowOn
 import okhttp3.MultipartBody
 import retrofit2.Response
 
+
 class UserRepository(
     private val userService: UserService,
     private val sessionManager: SessionManager
@@ -154,26 +155,26 @@ class UserRepository(
         return userService.uploadAvatar(token, file)
     }
 
-    fun getAllUsers(limit: Int, offset: Int) = kotlinx.coroutines.flow.flow {
+    fun getAllUsers(limit: Int, offset: Int) = flow {
         try {
+            // Проверка токена
             val token = sessionManager.getAccessToken()
             if (token.isNullOrEmpty()) {
-                emit(com.sosiso4kawo.betaapp.util.Result.Failure(Exception("Токен доступа отсутствует")))
+                emit(Result.Failure(Exception("Токен доступа отсутствует")))
                 return@flow
             }
             val response = userService.getAllUsers(limit, offset)
+
             if (response.isSuccessful) {
-                // Извлекаем пользователей из поля users
-                val users = response.body()?.users ?: emptyList()
-                emit(com.sosiso4kawo.betaapp.util.Result.Success(users))
+                val users = response.body()?.leaderboard?.sortedByDescending { it.total_points ?: 0 } ?: emptyList()
+                emit(Result.Success(users))
             } else {
-                emit(com.sosiso4kawo.betaapp.util.Result.Failure(Exception("Ошибка сервера: ${response.code()}")))
+                emit(Result.Failure(Exception("Ошибка сервера: ${response.code()}")))
             }
         } catch (e: Exception) {
-            emit(com.sosiso4kawo.betaapp.util.Result.Failure(e))
+            emit(Result.Failure(e))
         }
     }
-
     fun getProgress(): Flow<Result<ProgressResponse>> = flow {
         val token = sessionManager.getAccessToken()
         if (token != null) {

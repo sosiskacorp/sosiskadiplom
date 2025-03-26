@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="200dp"
+    android:padding="16dp">
+
+    <!-- 2nd Place -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/secondPlaceContainer"
+        android:layout_width="0dp"
+        android:layout_height="140dp"
+        android:background="@drawable/selector_podium_item"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/firstPlaceContainer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintHorizontal_weight="1">
+
+        <ImageView
+            android:id="@+id/ivSecondAvatar"
+            android:layout_width="90dp"
+            android:layout_height="90dp"
+            android:padding="3dp"
+            android:background="@drawable/silver_avatar_border"
+            app:layout_constraintBottom_toTopOf="@+id/tvSecondPoints"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"/>
+
+        <TextView
+            android:id="@+id/tvSecondName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxWidth="100dp"
+            android:ellipsize="end"
+            android:lines="1"
+            style="@style/PodiumTextShadow"
+            app:layout_constraintBottom_toTopOf="@id/ivSecondAvatar"
+            app:layout_constraintEnd_toEndOf="@id/ivSecondAvatar"
+            app:layout_constraintStart_toStartOf="@id/ivSecondAvatar"/>
+
+        <TextView
+            android:id="@+id/tvSecondPoints"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/silver_color"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            style="@style/PodiumTextShadow"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@id/ivSecondAvatar"
+            app:layout_constraintStart_toStartOf="@id/ivSecondAvatar"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- 1st Place -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/firstPlaceContainer"
+        android:layout_width="0dp"
+        android:layout_height="160dp"
+        android:background="@drawable/selector_podium_item"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/thirdPlaceContainer"
+        app:layout_constraintStart_toEndOf="@+id/secondPlaceContainer"
+        app:layout_constraintHorizontal_weight="1">
+
+        <ImageView
+            android:id="@+id/ivFirstAvatar"
+            android:layout_width="110dp"
+            android:layout_height="110dp"
+            android:padding="3dp"
+            android:background="@drawable/gold_avatar_border"
+            app:layout_constraintBottom_toTopOf="@+id/tvFirstPoints"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"/>
+
+        <TextView
+            android:id="@+id/tvFirstName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxWidth="120dp"
+            android:ellipsize="end"
+            android:lines="1"
+            style="@style/PodiumTextShadow"
+            app:layout_constraintBottom_toTopOf="@id/ivFirstAvatar"
+            app:layout_constraintEnd_toEndOf="@id/ivFirstAvatar"
+            app:layout_constraintStart_toStartOf="@id/ivFirstAvatar"/>
+
+        <TextView
+            android:id="@+id/tvFirstPoints"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/gold_color"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            style="@style/PodiumTextShadow"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@id/ivFirstAvatar"
+            app:layout_constraintStart_toStartOf="@id/ivFirstAvatar"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- 3rd Place -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/thirdPlaceContainer"
+        android:layout_width="0dp"
+        android:layout_height="140dp"
+        android:background="@drawable/selector_podium_item"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/firstPlaceContainer"
+        app:layout_constraintHorizontal_weight="1">
+
+        <ImageView
+            android:id="@+id/ivThirdAvatar"
+            android:layout_width="90dp"
+            android:layout_height="90dp"
+            android:padding="3dp"
+            android:background="@drawable/bronze_avatar_border"
+            app:layout_constraintBottom_toTopOf="@+id/tvThirdPoints"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"/>
+
+        <TextView
+            android:id="@+id/tvThirdName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxWidth="100dp"
+            android:ellipsize="end"
+            android:lines="1"
+            style="@style/PodiumTextShadow"
+            app:layout_constraintBottom_toTopOf="@id/ivThirdAvatar"
+            app:layout_constraintEnd_toEndOf="@id/ivThirdAvatar"
+            app:layout_constraintStart_toStartOf="@id/ivThirdAvatar"/>
+
+        <TextView
+            android:id="@+id/tvThirdPoints"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/bronze_color"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            style="@style/PodiumTextShadow"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@id/ivThirdAvatar"
+            app:layout_constraintStart_toStartOf="@id/ivThirdAvatar"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
