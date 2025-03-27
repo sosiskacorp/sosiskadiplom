@@ -1,3 +1,4 @@
+// Файл: AuthViewModel.kt
 package com.sosiso4kawo.betaapp.ui.auth
 
 import android.util.Patterns
@@ -30,8 +31,7 @@ class AuthViewModel(
                 _uiState.value = AuthUiState.Success(
                     AuthResponse(
                         access_token = accessToken,
-                        refresh_token = sessionManager.getRefreshToken() ?: "",
-                        expiresIn = sessionManager.getExpiresIn()
+                        refresh_token = sessionManager.getRefreshToken() ?: ""
                     )
                 )
             } else {
@@ -57,7 +57,6 @@ class AuthViewModel(
     }
 
     fun register(email: String, password: String) {
-        // Добавлена проверка корректного формата почты
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             _uiState.value = AuthUiState.Error("Неверный формат почты")
             return

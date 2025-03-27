@@ -17,7 +17,6 @@ data class RefreshTokenRequest(
 data class AuthResponse(
     val access_token: String,
     val refresh_token: String,
-    val expiresIn: Long?
 )
 
 data class AuthError(

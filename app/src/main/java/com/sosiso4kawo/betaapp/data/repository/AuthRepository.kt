@@ -21,11 +21,11 @@ class AuthRepository(private val authService: AuthService, private val sessionMa
                     val body = response.body()
                     Log.d("AuthRepository", "Login successful, response body: $body")
                     if (body != null) {
-                        // Сохраняем токены в SessionManager с expiresIn (если поле отсутствует, используем значение по умолчанию)
+                        // Сохраняем токены в SessionManager с expiresIn = 60 секунд
                         sessionManager.saveTokens(
                             accessToken = body.access_token,
                             refreshToken = body.refresh_token,
-                            expiresIn = body.expiresIn ?: (7 * 24 * 3600L)
+                            expiresIn = 604800L
                         )
                         val profileResponse = authService.getProfile("Bearer ${body.access_token}")
                         if (profileResponse.isSuccessful) {
@@ -46,7 +46,6 @@ class AuthRepository(private val authService: AuthService, private val sessionMa
                 }
                 else -> {
                     val errorBody = response.errorBody()?.string() ?: ""
-                    // Если ошибка связана с неверным форматом почты, возвращаем соответствующее сообщение
                     if (errorBody.contains("Field validation for 'Email' failed on the 'email' tag")) {
                         emit(Result.failure(Exception("Неверный формат почты")))
                         return@flow
@@ -79,7 +78,6 @@ class AuthRepository(private val authService: AuthService, private val sessionMa
             emit(Result.failure(Exception(errorMessage)))
         }
     }
-
     fun register(email: String, password: String): Flow<Result<AuthResponse>> = flow {
         try {
             val request = RegisterRequest(email, password)
@@ -196,7 +194,6 @@ class AuthRepository(private val authService: AuthService, private val sessionMa
             emit(Result.failure(Exception(errorMessage)))
         }
     }
-
     fun logout(): Flow<Result<Unit>> = flow {
         try {
             Log.d("AuthRepository", "Initiating logout request")

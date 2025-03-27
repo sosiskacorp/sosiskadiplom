@@ -55,6 +55,4 @@ class SessionManager(context: Context) {
     }
 
     fun getUserUuid(): String? = getUserData()?.uuid
-
-    fun getExpiresIn(): Long = prefs.getLong(KEY_EXPIRES_IN, 7 * 24 * 3600L)
 }
