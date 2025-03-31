@@ -22,3 +22,8 @@ data class AuthResponse(
 data class AuthError(
     val message: String
 )
+
+data class VerificationRequest(
+    val email: String,
+    val code: String
+)

@@ -6,6 +6,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.Query
 
 interface AuthService {
     @POST("v1/auth/login")
@@ -22,4 +23,15 @@ interface AuthService {
 
     @GET("v1/users/me")
     suspend fun getProfile(@Header("Authorization") token: String): Response<User>
+
+    @POST("v1/auth/verification/code")
+    suspend fun sendVerificationCode(
+        @Query("email") email: String
+    ): Response<Unit>
+
+    // Новый эндпоинт для подтверждения почты
+    @POST("v1/auth/verification/email")
+    suspend fun verifyEmail(
+        @Body request: VerificationRequest
+    ): Response<Unit>
 }

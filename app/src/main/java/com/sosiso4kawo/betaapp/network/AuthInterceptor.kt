@@ -151,12 +151,12 @@ class AuthInterceptor(
     private fun logout() {
         Log.d("AuthInterceptor", "Токены недействительны или истекли, выполняем логаут.")
         sessionManager.clearSession()
-        Handler(Looper.getMainLooper()).post {
-            try {
-                navigationListener.navigateToLogin()
-            } catch (e: Exception) {
-                Log.e("AuthInterceptor", "Ошибка навигации при логауте: ${e.message}")
-            }
-        }
+//        Handler(Looper.getMainLooper()).post {
+//            try {
+//                navigationListener.navigateToLogin()
+//            } catch (e: Exception) {
+//                Log.e("AuthInterceptor", "Ошибка навигации при логауте: ${e.message}")
+//            }
+//        }
     }
 }

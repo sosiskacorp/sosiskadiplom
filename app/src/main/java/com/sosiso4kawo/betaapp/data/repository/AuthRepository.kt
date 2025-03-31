@@ -21,7 +21,7 @@ class AuthRepository(private val authService: AuthService, private val sessionMa
                     val body = response.body()
                     Log.d("AuthRepository", "Login successful, response body: $body")
                     if (body != null) {
-                        // Сохраняем токены в SessionManager с expiresIn = 60 секунд
+                        // Сохраняем токены в SessionManager
                         sessionManager.saveTokens(
                             accessToken = body.access_token,
                             refreshToken = body.refresh_token,
@@ -41,8 +41,22 @@ class AuthRepository(private val authService: AuthService, private val sessionMa
                     }
                 }
                 response.code() == 401 -> {
-                    Log.e("AuthRepository", "Login unauthorized (401): Invalid credentials")
-                    emit(Result.failure(Exception("Неверный логин или пароль")))
+                    val errorBody = response.errorBody()?.string() ?: ""
+                    try {
+                        val gson = com.google.gson.GsonBuilder().setLenient().create()
+                        val error = gson.fromJson(errorBody, AuthError::class.java)
+
+                        if (error?.message == "email not confirmed") {
+                            Log.d("AuthRepository", "Login failed: Email not confirmed")
+                            emit(Result.failure(Exception("email not confirmed")))
+                        } else {
+                            Log.e("AuthRepository", "Login unauthorized (401): Invalid credentials")
+                            emit(Result.failure(Exception("Неверный логин или пароль")))
+                        }
+                    } catch (e: Exception) {
+                        Log.e("AuthRepository", "Error parsing 401 response: ${e.message}")
+                        emit(Result.failure(Exception("Неверный логин или пароль")))
+                    }
                 }
                 else -> {
                     val errorBody = response.errorBody()?.string() ?: ""
@@ -78,6 +92,7 @@ class AuthRepository(private val authService: AuthService, private val sessionMa
             emit(Result.failure(Exception(errorMessage)))
         }
     }
+
     fun register(email: String, password: String): Flow<Result<AuthResponse>> = flow {
         try {
             val request = RegisterRequest(email, password)
@@ -247,6 +262,33 @@ class AuthRepository(private val authService: AuthService, private val sessionMa
                 else -> "Ошибка при выходе: ${e.message}"
             }
             emit(Result.failure(Exception(errorMessage)))
+        }
+    }
+
+    suspend fun sendVerificationCode(email: String): Result<Unit> {
+        return try {
+            val response = authService.sendVerificationCode(email)
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Ошибка отправки кода"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun verifyEmail(email: String, code: String): Result<Unit> {
+        return try {
+            val request = VerificationRequest(email, code)
+            val response = authService.verifyEmail(request)
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Ошибка подтверждения почты"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 }

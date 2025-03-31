@@ -1,4 +1,3 @@
-// Файл: AuthViewModel.kt
 package com.sosiso4kawo.betaapp.ui.auth
 
 import android.util.Patterns
@@ -26,7 +25,6 @@ class AuthViewModel(
     private fun checkSession() {
         viewModelScope.launch {
             val accessToken = sessionManager.getAccessToken()
-            // Если токен существует и не истёк, считаем пользователя авторизованным
             if (accessToken != null && !sessionManager.isAccessTokenExpired()) {
                 _uiState.value = AuthUiState.Success(
                     AuthResponse(
@@ -84,6 +82,23 @@ class AuthViewModel(
                     onFailure = { AuthUiState.Error(it.message ?: "Ошибка при выходе") }
                 )
             }
+        }
+    }
+
+    fun sendVerificationCode(email: String) {
+        viewModelScope.launch {
+            repository.sendVerificationCode(email)
+            // Здесь можно обновить UI состояние, если требуется
+        }
+    }
+
+    fun verifyEmail(email: String,code: String, callback: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            val result = repository.verifyEmail(email, code)
+            result.fold(
+                onSuccess = { callback(true, "") },
+                onFailure = { callback(false, it.message ?: "Неизвестная ошибка") }
+            )
         }
     }
 }
