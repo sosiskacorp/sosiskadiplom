@@ -34,58 +34,129 @@
                 android:background="@drawable/circular_border"
                 android:scaleType="centerCrop" />
 
-            <!-- Поля ввода -->
-            <com.google.android.material.textfield.TextInputLayout
+            <!-- Блок личных данных с оранжевой обводкой -->
+            <LinearLayout
+                android:id="@+id/personalDataContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:hint="Логин">
+                android:layout_marginBottom="16dp"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:background="@drawable/orange_border">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/loginEditText"
+                <!-- Заголовок блока личных данных -->
+                <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="text" />
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:text="Личные данные"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorPrimary"
+                    android:layout_marginBottom="12dp"/>
 
-            <com.google.android.material.textfield.TextInputLayout
+                <!-- Поля ввода -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:hint="Логин">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/loginEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:hint="Фамилия">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/lastNameEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textPersonName" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:hint="Имя">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/firstNameEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textPersonName" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:hint="Отчество">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/middleNameEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textPersonName" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+
+            <!-- Блок безопасности с оранжевой обводкой -->
+            <LinearLayout
+                android:id="@+id/securityContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:hint="Фамилия">
+                android:layout_marginBottom="16dp"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:background="@drawable/orange_border">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/lastNameEditText"
+                <!-- Заголовок блока безопасности -->
+                <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="textPersonName" />
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:text="Безопасность"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorPrimary"
+                    android:layout_marginBottom="12dp"/>
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:hint="Имя">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/firstNameEditText"
+                <!-- Неизменяемое поле email -->
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="textPersonName" />
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:orientation="vertical"
+                    android:layout_marginBottom="12dp">
+                    
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Email:"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                        
+                    <TextView
+                        android:id="@+id/emailTextView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="16sp"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:hint="Отчество">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/middleNameEditText"
+                <!-- Кнопка сброса пароля -->
+                <Button
+                    android:id="@+id/resetPasswordButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="textPersonName" />
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:text="Сбросить пароль" />
+            </LinearLayout>
 
             <!-- Кнопка сохранения -->
             <Button

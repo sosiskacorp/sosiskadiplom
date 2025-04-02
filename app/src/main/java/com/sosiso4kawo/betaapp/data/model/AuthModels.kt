@@ -27,3 +27,13 @@ data class VerificationRequest(
     val email: String,
     val code: String
 )
+
+data class PasswordResetRequest(
+    val email: String,
+    val code: String,
+    val new_password: String
+)
+
+data class EmailResponse(
+    val email: String
+)

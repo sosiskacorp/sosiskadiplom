@@ -291,4 +291,82 @@ class AuthRepository(private val authService: AuthService, private val sessionMa
             Result.failure(e)
         }
     }
+
+    suspend fun getEmail(token: String): Flow<Result<EmailResponse>> = flow {
+        try {
+            val response = authService.getEmail(token)
+            Log.d("AuthRepository", "Get email response: code=${response.code()}")
+
+            when {
+                response.isSuccessful -> {
+                    val body = response.body()
+                    if (body != null) {
+                        Log.d("AuthRepository", "Get email successful, email: ${body.email}")
+                        emit(Result.success(body))
+                    } else {
+                        Log.e("AuthRepository", "Get email successful but body is null")
+                        emit(Result.failure(Exception("Не удалось получить email: пустой ответ")))
+                    }
+                }
+                response.code() == 401 -> {
+                    Log.e("AuthRepository", "Get email unauthorized (401): Invalid token")
+                    emit(Result.failure(Exception("Требуется авторизация")))
+                }
+                response.code() == 404 -> {
+                    Log.e("AuthRepository", "Get email not found (404)")
+                    emit(Result.failure(Exception("Email не найден")))
+                }
+                else -> {
+                    val errorBody = response.errorBody()?.string() ?: ""
+                    Log.e("AuthRepository", "Get email error: code=${response.code()}, error=$errorBody")
+
+                    val errorMessage = if (errorBody.isBlank()) {
+                        "Ошибка сервера (${response.code()})"
+                    } else {
+                        try {
+                            val gson = com.google.gson.GsonBuilder().setLenient().create()
+                            val error = gson.fromJson(errorBody, AuthError::class.java)
+                            error?.message ?: "Ошибка получения email"
+                        } catch (e: Exception) {
+                            Log.e("AuthRepository", "Error parsing response: ${e.message}")
+                            "Ошибка при обработке ответа сервера"
+                        }
+                    }
+                    emit(Result.failure(Exception(errorMessage)))
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("AuthRepository", "Get email exception: ${e.message}")
+            val errorMessage = when (e) {
+                is java.net.UnknownHostException -> "Нет подключения к интернету"
+                is java.net.SocketTimeoutException -> "Превышено время ожидания ответа от сервера"
+                is com.google.gson.JsonSyntaxException -> "Ошибка при обработке ответа сервера"
+                else -> "Ошибка при получении email: ${e.message}"
+            }
+            emit(Result.failure(Exception(errorMessage)))
+        }
+    }
+    suspend fun resetPassword(email: String, code: String, newPassword: String): Result<Unit> {
+        return try {
+            val request = PasswordResetRequest(email, code, newPassword)
+            val response = authService.resetPassword(request)
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                val errorMessage = when (response.code()) {
+                    400 -> "Неверный код подтверждения"
+                    404 -> "Email не найден"
+                    else -> "Ошибка сброса пароля (${response.code()})"
+                }
+                Result.failure(Exception(errorMessage))
+            }
+        } catch (e: Exception) {
+            val errorMessage = when (e) {
+                is java.net.UnknownHostException -> "Нет подключения к интернету"
+                is java.net.SocketTimeoutException -> "Превышено время ожидания ответа от сервера"
+                else -> "Ошибка при сбросе пароля: ${e.message}"
+            }
+            Result.failure(Exception(errorMessage))
+        }
+    }
 }

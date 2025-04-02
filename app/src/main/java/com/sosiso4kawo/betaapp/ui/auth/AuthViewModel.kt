@@ -1,5 +1,6 @@
 package com.sosiso4kawo.betaapp.ui.auth
 
+import android.util.Log
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -101,4 +102,28 @@ class AuthViewModel(
             )
         }
     }
-}
+
+    fun resetPassword(email: String, code: String, newPassword: String, callback: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            val result = repository.resetPassword(email, code, newPassword)
+            result.fold(
+                onSuccess = { callback(true, "") },
+                onFailure = { callback(false, it.message ?: "Неизвестная ошибка") }
+            )
+        }
+    }
+
+    fun loadEmail(callback: (String?) -> Unit) {
+        viewModelScope.launch {
+            val token = "Bearer " + (sessionManager.getAccessToken() ?: "")
+            repository.getEmail(token).collect { result ->
+                result.fold(
+                    onSuccess = { callback(it.email) },
+                    onFailure = {
+                        Log.e("AuthViewModel", "Failed to load email: ${it.message}")
+                        callback(null)
+                    }
+                )
+            }
+        }
+    }}
