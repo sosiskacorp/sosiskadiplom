@@ -74,7 +74,7 @@ class ExerciseQuestionsFragment : Fragment() {
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentExerciseQuestionsBinding.inflate(inflater, container, false)
         setupInitialViews()
         return binding.root
@@ -150,7 +150,7 @@ class ExerciseQuestionsFragment : Fragment() {
                 val finishResponse = exercisesService.finishAttempt(sessionId, finishRequest)
 
                 if (finishResponse.isSuccessful) {
-                    finishResponse.body()?.lessons?.let {
+                    finishResponse.body()?.lessons?.let { it ->
                         lessonResultViewModel.aggregatedCorrectAnswers += it.sumOf { it.total_points }
                     } ?: Log.e("API", "Отсутствуют данные lessons в ответе")
                 } else {
@@ -309,13 +309,13 @@ class ExerciseQuestionsFragment : Fragment() {
 
         // Обработка изображений
         if (!question.images.isNullOrEmpty()) {
-            if (question.images!!.size == 1) {
+            if (question.images.size == 1) {
                 ivQuestionImage.visibility = View.VISIBLE
                 ivQuestionImage.adjustViewBounds = true
                 ivQuestionImage.maxHeight = requireContext().dpToPx(200) // ограничение по высоте
                 ivQuestionImage.scaleType = ImageView.ScaleType.FIT_CENTER
                 Glide.with(this)
-                    .load(question.images!![0].imageUrl)
+                    .load(question.images[0].imageUrl)
                     .into(ivQuestionImage)
 
                 ivQuestionImage.setOnClickListener {
@@ -330,7 +330,7 @@ class ExerciseQuestionsFragment : Fragment() {
                         scaleType = ImageView.ScaleType.FIT_CENTER
                     }
                     Glide.with(requireContext())
-                        .load(question.images!![0].imageUrl)
+                        .load(question.images[0].imageUrl)
                         .into(fullScreenImageView)
                     // При нажатии на полноэкранное изображение закрываем диалог
                     fullScreenImageView.setOnClickListener { dialog.dismiss() }
@@ -353,7 +353,7 @@ class ExerciseQuestionsFragment : Fragment() {
                         LinearLayout.LayoutParams.WRAP_CONTENT
                     )
                 }
-                question.images!!.forEach { image ->
+                question.images.forEach { image ->
                     val imageView = ImageView(requireContext()).apply {
                         adjustViewBounds = true
                         maxHeight = requireContext().dpToPx(200)
@@ -713,7 +713,7 @@ class ExerciseQuestionsFragment : Fragment() {
         return false
     }
 
-    fun Context.dpToPx(dp: Int): Int {
+    private fun Context.dpToPx(dp: Int): Int {
         return (dp * resources.displayMetrics.density).toInt()
     }
 

@@ -9,14 +9,30 @@ import com.sosiso4kawo.betaapp.data.model.Lesson
 import com.sosiso4kawo.betaapp.ui.custom.LevelButtonView
 
 class LessonsAdapter(
-    private val lessons: List<Lesson>
+    private val lessons: List<Lesson>,
+    private val completedLessons: Set<String>
 ) : RecyclerView.Adapter<LessonsAdapter.LessonViewHolder>() {
 
-    inner class LessonViewHolder(val levelButton: LevelButtonView) : RecyclerView.ViewHolder(levelButton) {
-        fun bind(lesson: Lesson) {
-            levelButton.setLevel(lesson.order, LevelButtonView.LevelStatus.AVAILABLE)
+    inner class LessonViewHolder(private val levelButton: LevelButtonView) : RecyclerView.ViewHolder(levelButton) {
+        fun bind(lesson: Lesson, position: Int) {
+            // Проверяем, пройден ли урок (используем поле lesson.uuid)
+            val isCompleted = completedLessons.contains(lesson.uuid)
+            // Первый урок всегда доступен; для остальных проверяем, что предыдущий урок завершён
+            val previousLessonCompleted = if (position == 0) true
+            else completedLessons.contains(lessons[position - 1].uuid)
+
+            val status = when {
+                isCompleted -> LevelButtonView.LevelStatus.COMPLETED
+                previousLessonCompleted -> LevelButtonView.LevelStatus.AVAILABLE
+                else -> LevelButtonView.LevelStatus.LOCKED
+            }
+
+            levelButton.setLevel(lesson.order, status)
+
             levelButton.setOnClickListener {
-                // Получаем Activity из контекста для показа диалога
+                // Если урок заблокирован, не реагируем на нажатие
+                if (status == LevelButtonView.LevelStatus.LOCKED) return@setOnClickListener
+
                 val activity = levelButton.context as? FragmentActivity
                 activity?.let {
                     val dialog = LessonInfoDialogFragment().apply {
@@ -50,7 +66,7 @@ class LessonsAdapter(
     }
 
     override fun onBindViewHolder(holder: LessonViewHolder, position: Int) {
-        holder.bind(lessons[position])
+        holder.bind(lessons[position], position)
     }
 
     override fun getItemCount(): Int = lessons.size

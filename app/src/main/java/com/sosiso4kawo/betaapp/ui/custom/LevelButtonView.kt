@@ -1,5 +1,6 @@
 package com.sosiso4kawo.betaapp.ui.custom
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
@@ -33,6 +34,7 @@ class LevelButtonView @JvmOverloads constructor(
         LOCKED
     }
 
+    @SuppressLint("SetTextI18n")
     fun setLevel(number: Int, status: LevelStatus) {
         levelNumberText.text = number.toString()
 
@@ -52,7 +54,7 @@ class LevelButtonView @JvmOverloads constructor(
             LevelStatus.LOCKED -> {
                 statusIcon.setImageResource(R.drawable.ic_lock)
                 statusIcon.setColorFilter(ContextCompat.getColor(context, android.R.color.darker_gray))
-                isEnabled = true
+                isEnabled = false
                 alpha = 0.5f
             }
         }

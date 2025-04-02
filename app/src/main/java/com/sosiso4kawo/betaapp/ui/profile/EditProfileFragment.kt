@@ -1,5 +1,6 @@
 package com.sosiso4kawo.betaapp.ui.profile
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
 import android.net.Uri
@@ -24,6 +25,7 @@ import com.google.android.material.textfield.TextInputLayout
 import com.sosiso4kawo.betaapp.R
 import com.sosiso4kawo.betaapp.data.model.UpdateProfileRequest
 import com.sosiso4kawo.betaapp.data.model.User
+import com.sosiso4kawo.betaapp.data.repository.UserRepository
 import com.sosiso4kawo.betaapp.databinding.FragmentEditProfileBinding
 import com.sosiso4kawo.betaapp.ui.auth.AuthViewModel
 import com.sosiso4kawo.betaapp.util.SessionManager
@@ -39,7 +41,7 @@ class EditProfileFragment : Fragment() {
 
     private var _binding: FragmentEditProfileBinding? = null
     private val binding get() = _binding!!
-    private val userRepository: com.sosiso4kawo.betaapp.data.repository.UserRepository by inject()
+    private val userRepository: UserRepository by inject()
     private lateinit var sessionManager: SessionManager
     private var currentUser: User? = null
 
@@ -228,14 +230,22 @@ class EditProfileFragment : Fragment() {
             } else {
                 codeInputLayout.error = null
             }
-            if (newPassword.isBlank() || confirmPassword.isBlank()) {
-                newPasswordInputLayout.error = "Введите новый пароль и подтвердите его"
-                return@setOnClickListener
-            } else if (newPassword != confirmPassword) {
-                newPasswordInputLayout.error = "Пароли не совпадают"
+
+            if (newPassword.isBlank()) {
+                newPasswordInputLayout.error = "Введите новый пароль"
                 return@setOnClickListener
             } else if (!isPasswordValid(newPassword)) {
                 newPasswordInputLayout.error = "Пароль должен содержать минимум 8 символов, одну заглавную букву, одну маленькую букву, одну цифру и один специальный символ"
+                return@setOnClickListener
+            } else {
+                newPasswordInputLayout.error = null
+            }
+
+            if (confirmPassword.isBlank()) {
+                newPasswordInputLayout.error = "Подтвердите пароль"
+                return@setOnClickListener
+            } else if (newPassword != confirmPassword) {
+                newPasswordInputLayout.error = "Пароли не совпадают"
                 return@setOnClickListener
             } else {
                 newPasswordInputLayout.error = null
@@ -265,6 +275,7 @@ class EditProfileFragment : Fragment() {
 
     private fun startCodeTimer(sendCodeButton: MaterialButton) {
         object : CountDownTimer(60000, 1000) {
+            @SuppressLint("SetTextI18n")
             override fun onTick(millisUntilFinished: Long) {
                 sendCodeButton.text = "Отправить код (${millisUntilFinished / 1000}s)"
             }
@@ -276,8 +287,12 @@ class EditProfileFragment : Fragment() {
     }
 
     private fun isPasswordValid(password: String): Boolean {
-        val passwordPattern = Regex("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@\$!%*?&])[A-Za-z\\d@\$!%*?&]{8,}\$")
-        return passwordPattern.matches(password)
+        val hasUpperCase = password.any { it.isUpperCase() }
+        val hasLowerCase = password.any { it.isLowerCase() }
+        val hasSpecialChar = password.any { !it.isLetterOrDigit() }
+        val hasMinLength = password.length >= 8
+        val hasNumber = password.any { it.isDigit() }
+        return hasUpperCase && hasLowerCase && hasSpecialChar && hasMinLength && hasNumber
     }
 
     private fun startCrop(sourceUri: Uri) {

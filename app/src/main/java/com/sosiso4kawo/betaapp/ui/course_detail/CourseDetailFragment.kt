@@ -1,5 +1,6 @@
 package com.sosiso4kawo.betaapp.ui.course_detail
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -11,28 +12,34 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import com.sosiso4kawo.betaapp.R
 import com.sosiso4kawo.betaapp.data.api.CoursesService
+import com.sosiso4kawo.betaapp.data.api.UserService
 import com.sosiso4kawo.betaapp.data.model.Lesson
+import com.sosiso4kawo.betaapp.data.model.ProgressResponse
 import com.sosiso4kawo.betaapp.databinding.FragmentCourseDetailBinding
 import com.sosiso4kawo.betaapp.ui.lessons.LessonsAdapter
+import com.sosiso4kawo.betaapp.util.SessionManager
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
-import retrofit2.Retrofit
+
 
 class CourseDetailFragment : Fragment() {
 
     private var _binding: FragmentCourseDetailBinding? = null
     private val binding get() = _binding!!
 
-    private val retrofit: Retrofit by inject()
-    private val coursesService: CoursesService by lazy {
-        retrofit.create(CoursesService::class.java)
-    }
+    private val coursesService: CoursesService by inject()
+    private val userService: UserService by inject()
 
     private var lessonsAdapter: LessonsAdapter? = null
     private val lessonsList = mutableListOf<Lesson>()
 
+    // Набор uuid пройденных уроков
+    private val completedLessons = mutableSetOf<String>()
+
     private var courseUuid: String? = null
     private var courseTitle: String? = null
+
+    private lateinit var sessionManager: SessionManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,6 +47,7 @@ class CourseDetailFragment : Fragment() {
             courseUuid = it.getString("courseUuid")
             courseTitle = it.getString("courseTitle")
         }
+        sessionManager = SessionManager(requireContext())
     }
 
     override fun onCreateView(
@@ -55,6 +63,7 @@ class CourseDetailFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupInitialViews()
         loadLessons()
+        loadProgress()
     }
 
     private fun setupInitialViews() {
@@ -88,17 +97,22 @@ class CourseDetailFragment : Fragment() {
             GridLayoutManager.VERTICAL,
             false
         )
-
-        lessonsAdapter = LessonsAdapter(lessonsList)
+        // Изначально адаптер создаётся с пустым набором пройденных уроков
+        lessonsAdapter = LessonsAdapter(lessonsList, completedLessons)
         binding.rvLessons.adapter = lessonsAdapter
     }
 
+    /**
+     * Загрузка уроков.
+     * Если список уроков получается отдельным запросом, реализуйте здесь загрузку.
+     * В данном примере предполагается, что lessonsList заполняется из ответа getCourseContent.
+     */
+    @SuppressLint("NotifyDataSetChanged")
     private fun loadLessons() {
         if (courseUuid == null) {
             Log.e("CourseDetailFragment", "Course UUID is null")
             return
         }
-
         lifecycleScope.launch {
             try {
                 val response = coursesService.getCourseContent(courseUuid!!)
@@ -111,6 +125,36 @@ class CourseDetailFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 Log.e("CourseDetailFragment", "Exception while loading lessons", e)
+            }
+        }
+    }
+
+    /**
+     * Загрузка прогресса пользователя
+     */
+    @SuppressLint("NotifyDataSetChanged")
+    private fun loadProgress() {
+        lifecycleScope.launch {
+            try {
+                // Получаем токен из SessionManager
+                val accessToken = sessionManager.getAccessToken()
+                if (accessToken.isNullOrEmpty()) {
+                    Log.e("CourseDetailFragment", "Access token is null or empty")
+                    return@launch
+                }
+                val response = userService.getProgress("Bearer $accessToken")
+                if (response.isSuccessful && response.body() != null) {
+                    val progress: ProgressResponse = response.body()!!
+                    completedLessons.clear()
+                    // Заполняем набор пройденных уроков (используем поле lesson_uuid)
+                    progress.lessons.forEach { completedLessons.add(it.lesson_uuid) }
+                    // Обновляем адаптер, чтобы применить новые статусы
+                    lessonsAdapter?.notifyDataSetChanged()
+                } else {
+                    Log.e("CourseDetailFragment", "Error loading progress: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                Log.e("CourseDetailFragment", "Exception while loading progress", e)
             }
         }
     }

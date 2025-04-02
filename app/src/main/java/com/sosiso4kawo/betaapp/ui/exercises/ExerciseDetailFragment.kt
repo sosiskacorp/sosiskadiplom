@@ -1,5 +1,6 @@
 package com.sosiso4kawo.betaapp.ui.exercises
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -31,7 +32,7 @@ class ExerciseDetailFragment : Fragment() {
         super.onCreate(savedInstanceState)
         exerciseUuid = arguments?.getString("exerciseUuid")
         lessonUuid = arguments?.getString("lessonUuid")
-        Log.d("ExerciseDetail", "Received lessonUuid: $lessonUuid")
+        Log.d("ExerciseDetail", "Received lessonUuid: $lessonUuid, exerciseUuid: $exerciseUuid")
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -49,12 +50,13 @@ class ExerciseDetailFragment : Fragment() {
         btnLoadQuestions.setOnClickListener {
             val bundle = Bundle().apply {
                 putString("exerciseUuid", exerciseUuid)
-                putString("lessonUuid", lessonUuid) }
+                putString("lessonUuid", lessonUuid)
+            }
             findNavController().navigate(R.id.exerciseQuestionsFragment, bundle)
         }
-
     }
 
+    @SuppressLint("SetTextI18n")
     private fun loadExerciseInfo() {
         exerciseUuid?.let { uuid ->
             lifecycleScope.launch {
@@ -71,5 +73,4 @@ class ExerciseDetailFragment : Fragment() {
             }
         }
     }
-
 }
