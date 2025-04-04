@@ -43,6 +43,7 @@ class ExerciseQuestionsFragment : Fragment() {
 
     private var exerciseUuid: String? = null
     private var lessonUuid: String? = null // Новая переменная для идентификатора урока
+    private var isSingleExercise: Boolean = false
     private var questions: List<Question> = emptyList()
     private var currentQuestionIndex = 0
     private var correctAnswersCount = 0
@@ -66,7 +67,8 @@ class ExerciseQuestionsFragment : Fragment() {
         super.onCreate(savedInstanceState)
         exerciseUuid = arguments?.getString("exerciseUuid")
         lessonUuid = arguments?.getString("lessonUuid")
-        // Если это начало урока, зафиксировать время старта
+        isSingleExercise = arguments?.getBoolean("isSingleExercise", false) ?: false
+
         if (lessonResultViewModel.lessonStartTime == 0L) {
             lessonResultViewModel.lessonStartTime = System.currentTimeMillis()
         }
@@ -110,26 +112,30 @@ class ExerciseQuestionsFragment : Fragment() {
         btnNext.setOnClickListener {
             lifecycleScope.launch {
                 val isAnswerCorrect = processAndCheckAnswerForCurrentQuestion()
-
-                // Если вам не нужно отдельно проверять, можно просто положиться на корректное обновление correctAnswersCount
                 lessonResultViewModel.aggregatedCorrectAnswers += if (isAnswerCorrect) 1 else 0
-                lessonResultViewModel.aggregatedTotalQuestions++  // Добавляем один вопрос за раз
+                lessonResultViewModel.aggregatedTotalQuestions++
                 lessonResultViewModel.aggregatedPoints += calculatePointsForExercise()
 
                 if (currentQuestionIndex < questions.size - 1) {
                     currentQuestionIndex++
                     displayCurrentQuestion()
                 } else {
-                    lessonUuid?.let { lessonId ->
-                        exerciseUuid?.let { currentExerciseId ->
-                            handleNextExercise(lessonId, currentExerciseId)
+                    // Если выбран одиночный режим, завершаем сразу после этого упражнения
+                    if (isSingleExercise) {
+                        val totalTime = (System.currentTimeMillis() - lessonResultViewModel.lessonStartTime) / 1000
+                        navigateToLessonCompletion(totalTime)
+                    } else {
+                        lessonUuid?.let { lessonId ->
+                            exerciseUuid?.let { currentExerciseId ->
+                                handleNextExercise(lessonId, currentExerciseId)
+                            } ?: run {
+                                Log.e("Navigation", "exerciseUuid is null")
+                                navigateToHome()
+                            }
                         } ?: run {
-                            Log.e("Navigation", "exerciseUuid is null")
+                            Log.e("Navigation", "lessonUuid is null")
                             navigateToHome()
                         }
-                    } ?: run {
-                        Log.e("Navigation", "lessonUuid is null")
-                        navigateToHome()
                     }
                 }
             }
@@ -148,9 +154,8 @@ class ExerciseQuestionsFragment : Fragment() {
 
             try {
                 val finishResponse = exercisesService.finishAttempt(sessionId, finishRequest)
-
                 if (finishResponse.isSuccessful) {
-                    finishResponse.body()?.lessons?.let { it ->
+                    finishResponse.body()?.lessons?.let {
                         lessonResultViewModel.aggregatedCorrectAnswers += it.sumOf { it.total_points }
                     } ?: Log.e("API", "Отсутствуют данные lessons в ответе")
                 } else {
@@ -167,7 +172,6 @@ class ExerciseQuestionsFragment : Fragment() {
                 response.body()?.let { exercisesList ->
                     val sortedExercises = exercisesList.sortedBy { it.order }
                     val currentIndex = sortedExercises.indexOfFirst { it.uuid == currentExerciseId }
-
                     if (currentIndex != -1 && currentIndex < sortedExercises.lastIndex) {
                         val nextExercise = sortedExercises[currentIndex + 1]
                         navigateToExercise(nextExercise.uuid, lessonId)
@@ -207,6 +211,7 @@ class ExerciseQuestionsFragment : Fragment() {
                     Bundle().apply {
                         putString("exerciseUuid", exerciseUuid)
                         putString("lessonUuid", lessonUuid)
+                        putBoolean("isSingleExercise", isSingleExercise)
                     }
                 )
             }

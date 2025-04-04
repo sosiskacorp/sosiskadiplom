@@ -22,6 +22,8 @@ class ExerciseDetailFragment : Fragment() {
     private val exercisesService: ExercisesService by inject()
     private var exerciseUuid: String? = null
     private var lessonUuid: String? = null
+    // Флаг одиночного выбора (по умолчанию false)
+    private var isSingleExercise: Boolean = false
 
     private lateinit var tvExerciseTitle: TextView
     private lateinit var tvExerciseDescription: TextView
@@ -32,7 +34,8 @@ class ExerciseDetailFragment : Fragment() {
         super.onCreate(savedInstanceState)
         exerciseUuid = arguments?.getString("exerciseUuid")
         lessonUuid = arguments?.getString("lessonUuid")
-        Log.d("ExerciseDetail", "Received lessonUuid: $lessonUuid, exerciseUuid: $exerciseUuid")
+        isSingleExercise = arguments?.getBoolean("isSingleExercise", false) ?: false
+        Log.d("ExerciseDetail", "Received lessonUuid: $lessonUuid, exerciseUuid: $exerciseUuid, isSingleExercise: $isSingleExercise")
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -48,9 +51,11 @@ class ExerciseDetailFragment : Fragment() {
         loadExerciseInfo()
 
         btnLoadQuestions.setOnClickListener {
+            // Передаем флаг isSingleExercise далее в вопросы
             val bundle = Bundle().apply {
                 putString("exerciseUuid", exerciseUuid)
                 putString("lessonUuid", lessonUuid)
+                putBoolean("isSingleExercise", isSingleExercise)
             }
             findNavController().navigate(R.id.exerciseQuestionsFragment, bundle)
         }

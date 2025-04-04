@@ -16,11 +16,11 @@ import com.sosiso4kawo.betaapp.data.api.UserService
 import com.sosiso4kawo.betaapp.data.model.Lesson
 import com.sosiso4kawo.betaapp.data.model.ProgressResponse
 import com.sosiso4kawo.betaapp.databinding.FragmentCourseDetailBinding
+import com.sosiso4kawo.betaapp.ui.lessons.LessonInfoDialogFragment
 import com.sosiso4kawo.betaapp.ui.lessons.LessonsAdapter
 import com.sosiso4kawo.betaapp.util.SessionManager
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
-
 
 class CourseDetailFragment : Fragment() {
 
@@ -30,16 +30,16 @@ class CourseDetailFragment : Fragment() {
     private val coursesService: CoursesService by inject()
     private val userService: UserService by inject()
 
-    private var lessonsAdapter: LessonsAdapter? = null
+    // Список уроков
     private val lessonsList = mutableListOf<Lesson>()
-
-    // Набор uuid пройденных уроков
+    // Набор UUID завершённых уроков
     private val completedLessons = mutableSetOf<String>()
 
     private var courseUuid: String? = null
     private var courseTitle: String? = null
 
     private lateinit var sessionManager: SessionManager
+    private var lessonsAdapter: LessonsAdapter? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -90,22 +90,39 @@ class CourseDetailFragment : Fragment() {
         // Установка заголовка курса
         binding.tvLessonsHeader.text = courseTitle
 
-        // Настройка списка уроков
+        // Настройка списка уроков – создаём адаптер с передачей callback для обработки нажатия
         binding.rvLessons.layoutManager = GridLayoutManager(
             requireContext(),
             3,
             GridLayoutManager.VERTICAL,
             false
         )
-        // Изначально адаптер создаётся с пустым набором пройденных уроков
-        lessonsAdapter = LessonsAdapter(lessonsList, completedLessons)
+        lessonsAdapter = LessonsAdapter(lessonsList, completedLessons) { lesson ->
+            onLessonClick(lesson)
+        }
         binding.rvLessons.adapter = lessonsAdapter
     }
 
     /**
-     * Загрузка уроков.
-     * Если список уроков получается отдельным запросом, реализуйте здесь загрузку.
-     * В данном примере предполагается, что lessonsList заполняется из ответа getCourseContent.
+     * Обработка нажатия на урок.
+     * Если урок завершён, переходим к LessonContentFragment,
+     * иначе – к LessonInfoDialogFragment.
+     */
+    private fun onLessonClick(lesson: Lesson) {
+        val bundle = Bundle().apply { putString("lessonUuid", lesson.uuid) }
+        if (completedLessons.contains(lesson.uuid)) {
+            // Урок пройден – переходим к фрагменту с контентом урока
+            findNavController().navigate(R.id.lessonContentFragment, bundle)
+        } else {
+            // Урок не пройден – открываем диалоговое окно с информацией об уроке
+            val dialog = LessonInfoDialogFragment().apply {
+                arguments = bundle
+            }
+            dialog.show(requireActivity().supportFragmentManager, "LessonInfoDialog")
+        }
+    }
+    /**
+     * Загрузка уроков курса.
      */
     @SuppressLint("NotifyDataSetChanged")
     private fun loadLessons() {
@@ -130,13 +147,12 @@ class CourseDetailFragment : Fragment() {
     }
 
     /**
-     * Загрузка прогресса пользователя
+     * Загрузка прогресса пользователя – формирование набора завершённых уроков.
      */
     @SuppressLint("NotifyDataSetChanged")
     private fun loadProgress() {
         lifecycleScope.launch {
             try {
-                // Получаем токен из SessionManager
                 val accessToken = sessionManager.getAccessToken()
                 if (accessToken.isNullOrEmpty()) {
                     Log.e("CourseDetailFragment", "Access token is null or empty")
@@ -146,9 +162,7 @@ class CourseDetailFragment : Fragment() {
                 if (response.isSuccessful && response.body() != null) {
                     val progress: ProgressResponse = response.body()!!
                     completedLessons.clear()
-                    // Заполняем набор пройденных уроков (используем поле lesson_uuid)
                     progress.lessons.forEach { completedLessons.add(it.lesson_uuid) }
-                    // Обновляем адаптер, чтобы применить новые статусы
                     lessonsAdapter?.notifyDataSetChanged()
                 } else {
                     Log.e("CourseDetailFragment", "Error loading progress: ${response.code()}")

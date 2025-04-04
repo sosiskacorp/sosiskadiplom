@@ -2,14 +2,15 @@ package com.sosiso4kawo.betaapp
 
 import android.os.Bundle
 import android.view.View
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupWithNavController
-import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.sosiso4kawo.betaapp.databinding.ActivityMainBinding
 import com.sosiso4kawo.betaapp.data.repository.UserRepository
+import com.sosiso4kawo.betaapp.databinding.ActivityMainBinding
 import com.sosiso4kawo.betaapp.util.SessionManager
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
@@ -22,6 +23,11 @@ class MainActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        intent?.getIntExtra("NAVIGATION_TARGET", -1)?.takeIf { it != -1 }?.let {
+            supportFragmentManager.findFragmentById(R.id.nav_host_fragment_activity_main)
+                ?.findNavController()
+                ?.navigate(it)
+        }
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -42,10 +48,8 @@ class MainActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Централизованная проверка при возобновлении активности
         if (sessionManager.isAccessTokenExpired()) {
             sessionManager.clearSession()
-            setupNavigationForLogin()
         }
     }
 
@@ -72,7 +76,7 @@ class MainActivity : BaseActivity() {
     }
 
     private fun setupNavigation(navView: BottomNavigationView, navController: NavController) {
-        val appBarConfiguration = AppBarConfiguration(
+        AppBarConfiguration(
             setOf(
                 R.id.navigation_home,
                 R.id.navigation_rating,
@@ -85,7 +89,7 @@ class MainActivity : BaseActivity() {
         // Скрываем нижнюю панель навигации на экранах авторизации
         navController.addOnDestinationChangedListener { _: NavController, destination: NavDestination, _: Bundle? ->
             when (destination.id) {
-                R.id.navigation_login, R.id.navigation_register, R.id.navigation_course_detail, R.id.navigation_edit_profile, R.id.exerciseQuestionsFragment, R.id.exerciseDetailFragment -> navView.visibility = View.GONE
+                R.id.navigation_login, R.id.navigation_register, R.id.navigation_course_detail, R.id.navigation_edit_profile, R.id.exerciseQuestionsFragment, R.id.exerciseDetailFragment, R.id.lessonContentFragment -> navView.visibility = View.GONE
                 else -> navView.visibility = View.VISIBLE
             }
         }

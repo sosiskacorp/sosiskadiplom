@@ -1,8 +1,6 @@
 package com.sosiso4kawo.betaapp.ui.lessons
 
-import android.os.Bundle
 import android.view.ViewGroup
-import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.sosiso4kawo.betaapp.R
 import com.sosiso4kawo.betaapp.data.model.Lesson
@@ -10,7 +8,8 @@ import com.sosiso4kawo.betaapp.ui.custom.LevelButtonView
 
 class LessonsAdapter(
     private val lessons: List<Lesson>,
-    private val completedLessons: Set<String>
+    private val completedLessons: Set<String>,
+    private val onLessonClick: (Lesson) -> Unit
 ) : RecyclerView.Adapter<LessonsAdapter.LessonViewHolder>() {
 
     inner class LessonViewHolder(private val levelButton: LevelButtonView) : RecyclerView.ViewHolder(levelButton) {
@@ -32,14 +31,8 @@ class LessonsAdapter(
             levelButton.setOnClickListener {
                 // Если урок заблокирован, не реагируем на нажатие
                 if (status == LevelButtonView.LevelStatus.LOCKED) return@setOnClickListener
-
-                val activity = levelButton.context as? FragmentActivity
-                activity?.let {
-                    val dialog = LessonInfoDialogFragment().apply {
-                        arguments = Bundle().apply { putString("lessonUuid", lesson.uuid) }
-                    }
-                    dialog.show(it.supportFragmentManager, "LessonInfoDialog")
-                }
+                // Вызываем callback, чтобы родительский фрагмент сам решил, что делать
+                onLessonClick(lesson)
             }
         }
     }

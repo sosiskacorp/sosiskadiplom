@@ -1,5 +1,6 @@
 package com.sosiso4kawo.betaapp.ui.home
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -16,18 +17,15 @@ import com.sosiso4kawo.betaapp.R
 import com.sosiso4kawo.betaapp.data.api.CoursesService
 import com.sosiso4kawo.betaapp.data.model.Course
 import com.sosiso4kawo.betaapp.databinding.FragmentHomeBinding
-import com.sosiso4kawo.betaapp.network.AuthInterceptor
-import com.sosiso4kawo.betaapp.network.NavigationListener
 import com.sosiso4kawo.betaapp.ui.courses.CoursesAdapter
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import retrofit2.Retrofit
 
-class HomeFragment : Fragment(), NavigationListener {
+class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
-    private lateinit var authInterceptor: AuthInterceptor
     private lateinit var coursesAdapter: CoursesAdapter
     private val coursesList = mutableListOf<Course>()
 
@@ -111,6 +109,7 @@ class HomeFragment : Fragment(), NavigationListener {
         loadCourses()
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     private fun loadCourses() {
         lifecycleScope.launch {
             try {
@@ -128,10 +127,6 @@ class HomeFragment : Fragment(), NavigationListener {
                 Log.e("HomeFragment", "Исключение при загрузке курсов: ${e.message}")
             }
         }
-    }
-    override fun navigateToLogin() {
-        // Переход к экрану логина
-        findNavController().navigate(R.id.navigation_login)
     }
 
     override fun onDestroyView() {

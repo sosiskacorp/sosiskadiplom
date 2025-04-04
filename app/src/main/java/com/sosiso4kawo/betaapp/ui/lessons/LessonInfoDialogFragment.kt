@@ -1,5 +1,6 @@
 package com.sosiso4kawo.betaapp.ui.lessons
 
+import android.annotation.SuppressLint
 import android.app.Dialog
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -49,10 +50,7 @@ class LessonInfoDialogFragment : DialogFragment() {
         btnClose.setOnClickListener { dismiss() }
 
         btnStartLesson.setOnClickListener {
-            // Переход к экрану с контентом урока
-            val bundle = Bundle().apply { putString("lessonUuid", lessonUuid) }
-            findNavController().navigate(R.id.lessonContentFragment, bundle)
-            dismiss()
+            startLesson()
         }
 
         loadLessonInfo()
@@ -70,6 +68,40 @@ class LessonInfoDialogFragment : DialogFragment() {
                 } else {
                     tvTitle.text = "Ошибка загрузки"
                     tvDescription.text = "Не удалось загрузить информацию об уроке."
+                }
+            }
+        }
+    }
+
+    /**
+     * При нажатии на кнопку "Начать урок" загружаем список упражнений,
+     * выбираем первое (по порядку) и переходим к экрану ExerciseDetailFragment.
+     */
+    @SuppressLint("SetTextI18n")
+    private fun startLesson() {
+        lessonUuid?.let { uuid ->
+            lifecycleScope.launch {
+                try {
+                    val response = lessonsService.getLessonContent(uuid)
+                    if (response.isSuccessful) {
+                        val exercises = response.body()
+                        if (!exercises.isNullOrEmpty()) {
+                            // Сортировка по порядку и выбор первого упражнения
+                            val firstExercise = exercises.sortedBy { it.order }.first()
+                            val bundle = Bundle().apply {
+                                putString("exerciseUuid", firstExercise.uuid)
+                                putString("lessonUuid", uuid)
+                            }
+                            findNavController().navigate(R.id.exerciseDetailFragment, bundle)
+                            dismiss() // Закрываем диалог после навигации
+                        } else {
+                            tvDescription.text = "Нет упражнений для этого урока."
+                        }
+                    } else {
+                        tvDescription.text = "Ошибка загрузки контента урока."
+                    }
+                } catch (e: Exception) {
+                    tvDescription.text = "Ошибка: ${e.message}"
                 }
             }
         }

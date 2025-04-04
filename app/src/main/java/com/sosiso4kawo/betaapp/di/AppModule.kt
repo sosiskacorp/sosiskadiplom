@@ -2,6 +2,7 @@ package com.sosiso4kawo.betaapp.di
 
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
+import com.sosiso4kawo.betaapp.navigation.AppNavigator
 import com.sosiso4kawo.betaapp.data.api.AchievementsService
 import com.sosiso4kawo.betaapp.data.api.AuthService
 import com.sosiso4kawo.betaapp.data.api.CoursesService
@@ -13,11 +14,10 @@ import com.sosiso4kawo.betaapp.data.repository.UserRepository
 import com.sosiso4kawo.betaapp.network.AuthInterceptor
 import com.sosiso4kawo.betaapp.network.NavigationListener
 import com.sosiso4kawo.betaapp.ui.auth.AuthViewModel
-import com.sosiso4kawo.betaapp.ui.home.HomeFragment
 import com.sosiso4kawo.betaapp.util.SessionManager
 import okhttp3.OkHttpClient
 import org.koin.android.ext.koin.androidContext
-import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -25,7 +25,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 val appModule = module {
     // SessionManager с контекстом приложения
     single { SessionManager(androidContext()) }
-    single<NavigationListener> { HomeFragment() }
+    single<NavigationListener> { AppNavigator(get()) }
 
     // OkHttpClient с AuthInterceptor
     single {
