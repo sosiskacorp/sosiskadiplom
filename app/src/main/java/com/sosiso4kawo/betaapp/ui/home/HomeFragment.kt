@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
+import androidx.core.bundle.bundleOf
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -15,12 +16,16 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.sosiso4kawo.betaapp.R
 import com.sosiso4kawo.betaapp.data.api.CoursesService
+import com.sosiso4kawo.betaapp.data.api.UserService
 import com.sosiso4kawo.betaapp.data.model.Course
+import com.sosiso4kawo.betaapp.data.model.ProgressResponse
 import com.sosiso4kawo.betaapp.databinding.FragmentHomeBinding
 import com.sosiso4kawo.betaapp.ui.courses.CoursesAdapter
+import com.sosiso4kawo.betaapp.util.SessionManager
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
-import retrofit2.Retrofit
 
 class HomeFragment : Fragment() {
 
@@ -29,12 +34,11 @@ class HomeFragment : Fragment() {
     private lateinit var coursesAdapter: CoursesAdapter
     private val coursesList = mutableListOf<Course>()
 
-    // Получаем Retrofit через DI (Koin)
-    private val retrofit: Retrofit by inject()
     // Создаём сервис курсов через Retrofit
-    private val coursesService: CoursesService by lazy {
-        retrofit.create(CoursesService::class.java)
-    }
+    private val coursesService: CoursesService by inject()
+    private val userService: UserService by inject()
+    private val sessionManager: SessionManager by inject()
+    private var progressMap: Map<String, Int> = emptyMap()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -72,63 +76,71 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupCoursesSection() {
-        // Настраиваем RecyclerView для курсов
-        binding.rvCourses.layoutManager = LinearLayoutManager(context)
-        binding.rvCourses.addItemDecoration(
-            DividerItemDecoration(
-                requireContext(),
-                LinearLayoutManager.VERTICAL
-            ).apply {
-                setDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.divider)!!)
-            }
-        )
-        coursesAdapter = CoursesAdapter(coursesList,
-            onCourseClick = { course ->
-                // Переход к экрану уроков выбранного курса
-                val bundle = Bundle().apply {
-                    putString("courseUuid", course.uuid)
-                    putString("courseTitle", course.title)
+        binding.rvCourses.apply {
+            layoutManager = LinearLayoutManager(context)
+            binding.rvCourses.addItemDecoration(
+                DividerItemDecoration(
+                    requireContext(),
+                    LinearLayoutManager.VERTICAL
+                ).apply {
+                    val divider = ContextCompat.getDrawable(requireContext(), R.drawable.divider)!!
+                    setDrawable(divider)
                 }
-                // Используем Navigation Component для перехода
+            )
+        }
+
+        coursesAdapter = CoursesAdapter(coursesList, emptyMap()) { course ->
+            showCourseDialog(course)
+        }
+        binding.rvCourses.adapter = coursesAdapter
+        loadCoursesWithProgress()
+    }
+
+    private fun showCourseDialog(course: Course) {
+        AlertDialog.Builder(requireContext())
+            .setTitle(course.title)
+            .setMessage("Описание: ${course.description}\nСложность: ${course.difficulty.title}")
+            .setPositiveButton("Перейти к курсу") { _, _ ->
                 findNavController().navigate(
                     R.id.action_navigation_home_to_courseDetailFragment,
-                    bundle
+                    bundleOf(
+                        "courseUuid" to course.uuid,
+                        "courseTitle" to course.title
+                    )
                 )
-            },
-            onInfoClick = { course ->
-                // Отображаем диалог с информацией о курсе (как ранее)
-                AlertDialog.Builder(requireContext())
-                    .setTitle(course.title)
-                    .setMessage("Описание: ${course.description}\nСложность: ${course.difficulty.title}")
-                    .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
-                    .show()
             }
-        )
-        binding.rvCourses.adapter = coursesAdapter
-
-        loadCourses()
+            .setNegativeButton("Отмена", null)
+            .show()
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    private fun loadCourses() {
+    private fun loadCoursesWithProgress() {
         lifecycleScope.launch {
             try {
-                val response = coursesService.getCourses()
-                if (response.isSuccessful) {
-                    response.body()?.let { list ->
-                        coursesList.clear()
-                        coursesList.addAll(list)
-                        coursesAdapter.notifyDataSetChanged()
+                val token = sessionManager.getAccessToken() ?: return@launch
+                val courses = coursesService.getCourses().body() ?: emptyList()
+                val progress = userService.getProgress("Bearer $token").body() ?: ProgressResponse(emptyList(), emptyList(), emptyList())
+
+                progressMap = courses.associate { course ->
+                    val lessons = coursesService.getCourseContent(course.uuid).body() ?: emptyList()
+                    val completed = lessons.count { lesson ->
+                        progress.lessons.any { it.lesson_uuid == lesson.uuid }
                     }
-                } else {
-                    Log.e("HomeFragment", "Ошибка загрузки курсов: ${response.code()}")
+                    val progressValue = if (lessons.isNotEmpty()) (completed * 100) / lessons.size else 0
+                    course.uuid to progressValue
+                }
+
+                withContext(Dispatchers.Main) {
+                    coursesList.clear()
+                    coursesList.addAll(courses)
+                    coursesAdapter.progressMap = progressMap
+                    coursesAdapter.notifyDataSetChanged()
                 }
             } catch (e: Exception) {
-                Log.e("HomeFragment", "Исключение при загрузке курсов: ${e.message}")
+                Log.e("HomeFragment", "Ошибка загрузки данных: ${e.message}")
             }
         }
     }
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
