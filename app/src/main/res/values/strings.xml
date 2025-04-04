@@ -25,4 +25,6 @@
     <string name="accessibility_edit_profile">Редактировать профиль</string>
     <string name="accessibility_notifications">Уведомления</string>
     <string name="points_format">%d points</string>
+    <string name="status_icon">Status Icon</string>
+    <string name="courses_header">Курсы</string>
 </resources>

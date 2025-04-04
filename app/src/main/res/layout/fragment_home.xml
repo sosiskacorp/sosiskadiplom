@@ -50,6 +50,8 @@
         app:layout_constraintTop_toBottomOf="@id/start_learning_button"
         app:layout_constraintStart_toStartOf="parent"
         android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:gravity="center"
         tools:ignore="RtlSymmetry" />
 
     <!-- RecyclerView для списка курсов -->
