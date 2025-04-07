@@ -160,7 +160,9 @@ class AuthRepository(private val authService: AuthService, private val sessionMa
     fun refreshToken(refreshToken: String): Flow<Result<AuthResponse>> = flow {
         try {
             val request = RefreshTokenRequest(refreshToken)
-            Log.d("AuthRepository", "Token refresh request payload: ${com.google.gson.GsonBuilder().setPrettyPrinting().create().toJson(request)}")
+            Log.d("AuthRepository", "Token refresh request payload: ${
+                com.google.gson.GsonBuilder().setPrettyPrinting().create().toJson(request)
+            }")
             val response = authService.refreshToken(request)
             Log.d("AuthRepository", "Token refresh response: code=${response.code()}, headers=${response.headers()}, raw=${response.raw()}")
 
@@ -182,7 +184,6 @@ class AuthRepository(private val authService: AuthService, private val sessionMa
                 else -> {
                     val errorBody = response.errorBody()?.string() ?: ""
                     Log.e("AuthRepository", "Token refresh error: code=${response.code()}, error=$errorBody, headers=${response.headers()}")
-
                     val errorMessage = if (errorBody.isBlank()) {
                         "Ошибка сервера (${response.code()})"
                     } else {
@@ -199,7 +200,7 @@ class AuthRepository(private val authService: AuthService, private val sessionMa
                 }
             }
         } catch (e: Exception) {
-            Log.e("AuthRepository", "Token refresh exception: ${e.message}, cause: ${e.cause}, stack trace: ${e.stackTrace.joinToString("\n")}")
+            Log.e("AuthRepository", "Token refresh exception: ${e.message}, cause: ${e.cause}")
             val errorMessage = when (e) {
                 is java.net.UnknownHostException -> "Нет подключения к интернету"
                 is java.net.SocketTimeoutException -> "Превышено время ожидания ответа от сервера"
@@ -209,6 +210,7 @@ class AuthRepository(private val authService: AuthService, private val sessionMa
             emit(Result.failure(Exception(errorMessage)))
         }
     }
+
     fun logout(): Flow<Result<Unit>> = flow {
         try {
             Log.d("AuthRepository", "Initiating logout request")
@@ -292,7 +294,7 @@ class AuthRepository(private val authService: AuthService, private val sessionMa
         }
     }
 
-    suspend fun getEmail(token: String): Flow<Result<EmailResponse>> = flow {
+    fun getEmail(token: String): Flow<Result<EmailResponse>> = flow {
         try {
             val response = authService.getEmail(token)
             Log.d("AuthRepository", "Get email response: code=${response.code()}")

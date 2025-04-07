@@ -27,7 +27,7 @@ class AuthInterceptor(
     override fun intercept(chain: Interceptor.Chain): Response {
         var request = chain.request()
         val path = request.url.encodedPath
-// Исключаем эндпоинты логина, регистрации и обновления токена из обработки перехватчиком
+        // Исключаем эндпоинты логина, регистрации и обновления токена из обработки перехватчиком
         if (path.contains("v1/auth/login") ||
             path.contains("v1/auth/register") ||
             path.contains("v1/auth/refresh")) {
@@ -38,9 +38,9 @@ class AuthInterceptor(
         val tokenExpiry = sessionManager.getTokenExpiry()
         val timeLeft = tokenExpiry - currentTime
         Log.d("AuthInterceptor", "Текущее время: $currentTime, время истечения токена: $tokenExpiry, осталось: $timeLeft мс")
-        // Если осталось менее 10 секунд до истечения, инициируем обновление токена
+        // Если осталось менее 60 секунд до истечения, инициируем обновление токена
         if (timeLeft < REFRESH_THRESHOLD) {
-            Log.d("AuthInterceptor", "Осталось менее 10 секунд до истечения токена. Инициируем обновление токена.")
+            Log.d("AuthInterceptor", "Осталось менее 60 секунд до истечения токена. Инициируем обновление токена.")
             synchronized(this) {
                 if (!isRefreshing) {
                     isRefreshing = true
@@ -103,7 +103,7 @@ class AuthInterceptor(
     }
 
     private suspend fun handleTokenRefresh() {
-    Log.d("AuthInterceptor", "Запуск процедуры обновления токена.")
+        Log.d("AuthInterceptor", "Запуск процедуры обновления токена.")
         val refreshToken = sessionManager.getRefreshToken() ?: run {
             logout()
             return
@@ -112,17 +112,14 @@ class AuthInterceptor(
         try {
             val result = get<AuthRepository>().refreshToken(refreshToken).first()
             result.getOrNull()?.let {
-                sessionManager.saveTokens(
-                    it.access_token,
-                    it.refresh_token,
-                    604800L
-                )
+                sessionManager.saveTokens(it.access_token, it.refresh_token, 604800L)
                 Log.d("AuthInterceptor", "Токен успешно обновлён.")
-            } ?:
-            Log.e("AuthInterceptor", "Не удалось получить токен после обновления.")
-            logout()
+            } ?: run {
+                Log.e("AuthInterceptor", "Не удалось получить токен после обновления.")
+                logout()
+            }
         } catch (e: Exception) {
-            Log.e("AuthInterceptor", "Ошибка обновления токена")
+            Log.e("AuthInterceptor", "Ошибка обновления токена: ${e.message}")
             logout()
         }
     }

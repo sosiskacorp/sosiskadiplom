@@ -89,11 +89,11 @@ class AuthViewModel(
     fun sendVerificationCode(email: String) {
         viewModelScope.launch {
             repository.sendVerificationCode(email)
-            // Здесь можно обновить UI состояние, если требуется
+            // Можно обновить UI состояние, если требуется
         }
     }
 
-    fun verifyEmail(email: String,code: String, callback: (Boolean, String) -> Unit) {
+    fun verifyEmail(email: String, code: String, callback: (Boolean, String) -> Unit) {
         viewModelScope.launch {
             val result = repository.verifyEmail(email, code)
             result.fold(
@@ -126,4 +126,5 @@ class AuthViewModel(
                 )
             }
         }
-    }}
+    }
+}

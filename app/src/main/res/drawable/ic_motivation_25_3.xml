@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="150dp"
+    android:height="150dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FB8C00"
+        android:pathData="M12,2a10,10 0 1,0 0,20a10,10 0 1,0 0,-20z"/>
+    <!-- Сосредоточенные глаза -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M9,10a0.8,1.1 0 1,0 0,2a0.8,1.1 0 1,0 0,-2z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M15,10a0.8,1.1 0 1,0 0,2a0.8,1.1 0 1,0 0,-2z"/>
+    <!-- Капли пота -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M6,10c0.3,0 0.6,0.3 0.6,0.6c0,0.3 -0.3,0.6 -0.6,0.6"/>
+    <!-- Нейтрально-улыбающийся рот -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.2"
+        android:strokeLineCap="round"
+        android:pathData="M9,16c2,0.8 4,0.8 6,0"/>
+</vector>

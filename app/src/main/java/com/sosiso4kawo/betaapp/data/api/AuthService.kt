@@ -23,7 +23,7 @@ interface AuthService {
 
     @GET("v1/users/me")
     suspend fun getProfile(@Header("Authorization") token: String): Response<User>
-    
+
     @GET("v1/auth/me")
     suspend fun getEmail(@Header("Authorization") token: String): Response<EmailResponse>
 
@@ -37,7 +37,7 @@ interface AuthService {
     suspend fun verifyEmail(
         @Body request: VerificationRequest
     ): Response<Unit>
-    
+
     // Эндпоинт для сброса пароля
     @POST("v1/auth/password/reset")
     suspend fun resetPassword(
