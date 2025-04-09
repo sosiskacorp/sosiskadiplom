@@ -1,11 +1,9 @@
 package com.sosiso4kawo.betaapp.data.api
 
 import com.sosiso4kawo.betaapp.data.model.LeaderboardResponse
-import com.sosiso4kawo.betaapp.data.model.LeaderboardUser
+import com.sosiso4kawo.betaapp.data.model.ProgressResponse
 import com.sosiso4kawo.betaapp.data.model.UpdateProfileRequest
 import com.sosiso4kawo.betaapp.data.model.User
-import com.sosiso4kawo.betaapp.data.model.UsersResponse
-import com.sosiso4kawo.betaapp.data.model.ProgressResponse
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body

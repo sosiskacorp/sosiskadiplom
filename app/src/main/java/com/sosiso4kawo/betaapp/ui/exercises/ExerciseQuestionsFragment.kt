@@ -155,7 +155,7 @@ class ExerciseQuestionsFragment : Fragment() {
             try {
                 val finishResponse = exercisesService.finishAttempt(sessionId, finishRequest)
                 if (finishResponse.isSuccessful) {
-                    finishResponse.body()?.lessons?.let {
+                    finishResponse.body()?.lessons?.let { it ->
                         lessonResultViewModel.aggregatedCorrectAnswers += it.sumOf { it.total_points }
                     } ?: Log.e("API", "Отсутствуют данные lessons в ответе")
                 } else {

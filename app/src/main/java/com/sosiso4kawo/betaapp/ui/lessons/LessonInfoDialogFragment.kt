@@ -87,7 +87,7 @@ class LessonInfoDialogFragment : DialogFragment() {
                         val exercises = response.body()
                         if (!exercises.isNullOrEmpty()) {
                             // Сортировка по порядку и выбор первого упражнения
-                            val firstExercise = exercises.sortedBy { it.order }.first()
+                            val firstExercise = exercises.minByOrNull { it.order }!!
                             val bundle = Bundle().apply {
                                 putString("exerciseUuid", firstExercise.uuid)
                                 putString("lessonUuid", uuid)
