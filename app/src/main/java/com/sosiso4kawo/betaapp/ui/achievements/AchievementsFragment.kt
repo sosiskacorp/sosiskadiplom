@@ -1,5 +1,6 @@
 package com.sosiso4kawo.betaapp.ui.achievements
 
+import android.annotation.SuppressLint
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
@@ -161,6 +162,7 @@ class AchievementsFragment : Fragment() {
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private fun updateProgress(achievements: List<Achievement>) {
         val total = achievements.size
         val achievedCount = achievements.count { it.achieved == true }

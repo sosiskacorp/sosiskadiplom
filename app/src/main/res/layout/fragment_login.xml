@@ -8,6 +8,7 @@
         android:id="@+id/backgroundLogo"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:contentDescription="@string/BackgroundLogo"
         android:src="@drawable/logo_graphic"
         android:scaleType="fitCenter"
         android:adjustViewBounds="true"
@@ -20,7 +21,7 @@
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:padding="@dimen/padding_medium">
 
             <!-- Основной логотип -->
@@ -28,6 +29,7 @@
                 android:id="@+id/mainLogo"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:contentDescription="@string/mainLogo"
                 android:src="@drawable/logo_text"
                 android:adjustViewBounds="true"
                 app:layout_constraintEnd_toEndOf="parent"

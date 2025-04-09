@@ -171,6 +171,12 @@ class AuthRepository(private val authService: AuthService, private val sessionMa
                     val body = response.body()
                     Log.d("AuthRepository", "Token refresh successful, response body: $body")
                     if (body != null) {
+                        // Важное изменение: сохраняем новые токены сразу здесь
+                        sessionManager.saveTokens(
+                            accessToken = body.access_token,
+                            refreshToken = body.refresh_token,
+                            expiresIn = 604800L
+                        )
                         emit(Result.success(body))
                     } else {
                         Log.e("AuthRepository", "Token refresh successful but body is null")
@@ -183,7 +189,7 @@ class AuthRepository(private val authService: AuthService, private val sessionMa
                 }
                 else -> {
                     val errorBody = response.errorBody()?.string() ?: ""
-                    Log.e("AuthRepository", "Token refresh error: code=${response.code()}, error=$errorBody, headers=${response.headers()}")
+                    Log.e("AuthRepository", "Token refresh error: code=${response.code()}, error=$errorBody")
                     val errorMessage = if (errorBody.isBlank()) {
                         "Ошибка сервера (${response.code()})"
                     } else {

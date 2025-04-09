@@ -1,5 +1,6 @@
 package com.sosiso4kawo.betaapp.ui.auth
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.text.Editable
@@ -21,6 +22,7 @@ import com.sosiso4kawo.betaapp.databinding.FragmentRegisterBinding
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
+@Suppress("SameParameterValue")
 class RegisterFragment : Fragment() {
     private var _binding: FragmentRegisterBinding? = null
     private val binding get() = _binding!!
@@ -192,6 +194,7 @@ class RegisterFragment : Fragment() {
     private fun startCodeTimer(sendCodeButton: MaterialButton) {
         codeTimer?.cancel()
         codeTimer = object : CountDownTimer(60000, 1000) {
+            @SuppressLint("SetTextI18n")
             override fun onTick(millisUntilFinished: Long) {
                 sendCodeButton.text = "Отправить код (${millisUntilFinished / 1000}s)"
             }
@@ -204,7 +207,7 @@ class RegisterFragment : Fragment() {
 
     private fun showError(message: String) {
         // Можно заменить на кастомное отображение ошибки
-        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+        AlertDialog.Builder(requireContext())
             .setTitle("Ошибка")
             .setMessage(message)
             .setPositiveButton("OK", null)
@@ -213,7 +216,7 @@ class RegisterFragment : Fragment() {
 
     private fun showSuccess(message: String) {
         // Можно заменить на кастомное отображение успешного сообщения
-        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+        AlertDialog.Builder(requireContext())
             .setTitle("Успех")
             .setMessage(message)
             .setPositiveButton("OK", null)

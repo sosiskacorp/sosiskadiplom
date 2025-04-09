@@ -1,5 +1,6 @@
 package com.sosiso4kawo.betaapp.ui.rating
 
+import android.annotation.SuppressLint
 import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
@@ -32,6 +33,7 @@ class UserAdapter(
         return UserViewHolder(view)
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: UserViewHolder, position: Int) {
         val user = leaderboard[position]
 
@@ -62,6 +64,7 @@ class UserAdapter(
 
     override fun getItemCount(): Int = leaderboard.size
 
+    @SuppressLint("NotifyDataSetChanged")
     fun updateUsers(newUsers: List<LeaderboardUser>) {
         leaderboard.clear()
         leaderboard.addAll(newUsers)
@@ -74,6 +77,7 @@ class UserAdapter(
         notifyItemRangeInserted(startPos, newUsers.size)
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     fun setCurrentUserId(userId: String) {
         currentUserId = userId
         notifyDataSetChanged()

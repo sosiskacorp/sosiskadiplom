@@ -59,6 +59,7 @@
             android:id="@+id/ivCompleted"
             android:layout_width="48dp"
             android:layout_height="48dp"
+            android:contentDescription="@string/ivCompleted"
             android:src="@drawable/ic_check"
             app:tint="?attr/colorOnPrimaryContainer"
         android:visibility="gone"

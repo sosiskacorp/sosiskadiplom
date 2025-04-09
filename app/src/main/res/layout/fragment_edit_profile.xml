@@ -23,18 +23,19 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Аватар: кликабельный для выбора изображения -->
+            <!-- Аватар -->
             <ImageView
                 android:id="@+id/avatarImageView"
                 android:layout_width="120dp"
                 android:layout_height="120dp"
                 android:layout_gravity="center"
                 android:layout_marginBottom="16dp"
+                android:contentDescription="@string/avatar_description"
                 android:src="@drawable/placeholder_avatar"
                 android:background="@drawable/circular_border"
                 android:scaleType="centerCrop" />
 
-            <!-- Блок личных данных с оранжевой обводкой -->
+            <!-- Блок личных данных -->
             <LinearLayout
                 android:id="@+id/personalDataContainer"
                 android:layout_width="match_parent"
@@ -44,22 +45,20 @@
                 android:padding="16dp"
                 android:background="@drawable/orange_border">
 
-                <!-- Заголовок блока личных данных -->
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Личные данные"
+                    android:text="@string/personal_data"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textColor="?attr/colorPrimary"
                     android:layout_marginBottom="12dp"/>
 
-                <!-- Поля ввода -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
-                    android:hint="Логин">
+                    android:hint="@string/login_hint">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/loginEditText"
@@ -72,7 +71,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
-                    android:hint="Фамилия">
+                    android:hint="@string/last_name_hint">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/lastNameEditText"
@@ -85,7 +84,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
-                    android:hint="Имя">
+                    android:hint="@string/first_name_hint">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/firstNameEditText"
@@ -98,7 +97,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
-                    android:hint="Отчество">
+                    android:hint="@string/middle_name_hint">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/middleNameEditText"
@@ -108,7 +107,7 @@
                 </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
 
-            <!-- Блок безопасности с оранжевой обводкой -->
+            <!-- Блок безопасности -->
             <LinearLayout
                 android:id="@+id/securityContainer"
                 android:layout_width="match_parent"
@@ -118,30 +117,28 @@
                 android:padding="16dp"
                 android:background="@drawable/orange_border">
 
-                <!-- Заголовок блока безопасности -->
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Безопасность"
+                    android:text="@string/security"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textColor="?attr/colorPrimary"
                     android:layout_marginBottom="12dp"/>
 
-                <!-- Неизменяемое поле email -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:layout_marginBottom="12dp">
-                    
+
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Email:"
+                        android:text="@string/email_label"
                         android:textSize="14sp"
                         android:textStyle="bold" />
-                        
+
                     <TextView
                         android:id="@+id/emailTextView"
                         android:layout_width="match_parent"
@@ -150,20 +147,18 @@
                         android:layout_marginTop="4dp" />
                 </LinearLayout>
 
-                <!-- Кнопка сброса пароля -->
                 <Button
                     android:id="@+id/resetPasswordButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Сбросить пароль" />
+                    android:text="@string/reset_password" />
             </LinearLayout>
 
-            <!-- Кнопка сохранения -->
             <Button
                 android:id="@+id/saveButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Сохранить" />
+                android:text="@string/save_changes" />
 
         </LinearLayout>
     </ScrollView>

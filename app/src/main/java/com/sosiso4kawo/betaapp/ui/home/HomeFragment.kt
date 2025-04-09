@@ -52,8 +52,6 @@ class HomeFragment : Fragment() {
     private fun setupInitialViews() {
         binding.header.apply {
             setHeaderBackgroundColor(R.color.header_home)
-            // Если в CustomHeaderView есть элементы progress_bar и notification_button, то находим их по id
-            findViewById<android.widget.ProgressBar>(R.id.progress_bar)?.visibility = View.VISIBLE
             findViewById<android.widget.ImageButton>(R.id.notification_button)?.visibility = View.VISIBLE
             setOnNotificationClickListener { }
         }

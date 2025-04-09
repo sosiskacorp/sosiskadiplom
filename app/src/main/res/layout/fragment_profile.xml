@@ -48,7 +48,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Фамилия Имя Отчество"
+                android:text="@string/user_full_name"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:textColor="?attr/colorPrimary"
@@ -74,7 +74,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Общий прогресс"
+                    android:text="@string/totalProgress"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textColor="?attr/colorPrimary"
@@ -85,16 +85,15 @@
                     android:id="@+id/tvTotalPoints"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Всего поинтов: 0"
+                    android:text="@string/totalPoints"
                     android:textSize="16sp"
                     android:layout_marginBottom="8dp"/>
 
-                <!-- Количество пройденных курсов -->
                 <TextView
                     android:id="@+id/tvCompletedCourses"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Пройденных курсов: 0"
+                    android:text="@string/completedCourses"
                     android:textSize="16sp"/>
             </LinearLayout>
 
@@ -116,7 +115,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Персонализация"
+                    android:text="@string/personalization"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textColor="?attr/colorPrimary"
@@ -136,7 +135,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Тёмная тема"
+                        android:text="@string/dark_theme"
                         android:textSize="16sp"
                         android:textColor="?attr/colorPrimary" />
 
@@ -161,7 +160,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Звуки"
+                        android:text="@string/sounds"
                         android:textSize="16sp"
                         android:textColor="?attr/colorPrimary" />
 
@@ -180,14 +179,15 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:paddingVertical="8dp">
+                    android:paddingVertical="8dp"
+                    tools:ignore="UseCompoundDrawables">
 
                     <TextView
                         android:id="@+id/fontSizeLabel"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Размер текста"
+                        android:text="@string/text_size"
                         android:textSize="16sp"
                         android:textColor="?attr/colorPrimary" />
 
@@ -196,7 +196,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:src="@drawable/ic_arrow_up_down"
-                        android:contentDescription="Изменить размер текста" />
+                        android:contentDescription="@string/change_text_size" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -207,7 +207,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="64dp"
-                android:text="Выйти из аккаунта"
+                android:text="@string/logout_button"
                 android:textAllCaps="false"
                 android:textColor="?attr/colorError"
                 app:layout_constraintBottom_toBottomOf="parent"

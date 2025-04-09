@@ -1,5 +1,8 @@
+@file:Suppress("DEPRECATION")
+
 package com.sosiso4kawo.betaapp.ui.userdetails
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -46,6 +49,7 @@ class UserDetailsFragment : Fragment() {
         return binding.root
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         userUuid?.let { uuid ->

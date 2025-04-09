@@ -1,5 +1,6 @@
 package com.sosiso4kawo.betaapp.ui.lessons
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,6 +18,7 @@ class ExercisesAdapter(
         private val tvExerciseTitle: TextView = itemView.findViewById(R.id.tvExerciseTitle)
         private val tvPoints: TextView = itemView.findViewById(R.id.tvPoints)
 
+        @SuppressLint("SetTextI18n")
         fun bind(exercise: Exercise) {
             tvExerciseTitle.text = exercise.title
             tvPoints.text = "${exercise.points} pts"

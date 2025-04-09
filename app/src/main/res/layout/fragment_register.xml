@@ -1,14 +1,13 @@
-<?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- Фоновый логотип с прозрачностью -->
     <ImageView
         android:id="@+id/backgroundLogo"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:contentDescription="@string/background_logo_description"
         android:src="@drawable/logo_graphic"
         android:scaleType="fitCenter"
         android:adjustViewBounds="true"
@@ -24,11 +23,11 @@
             android:layout_height="wrap_content"
             android:padding="@dimen/padding_medium">
 
-            <!-- Основной логотип -->
             <ImageView
                 android:id="@+id/mainLogo"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:contentDescription="@string/main_logo_description"
                 android:src="@drawable/logo_text"
                 android:adjustViewBounds="true"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -37,7 +36,6 @@
                 app:layout_constraintWidth_percent="0.9"
                 android:layout_marginTop="@dimen/padding_large"/>
 
-            <!-- Поле ввода для email -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/emailLayout"
                 style="@style/Widget.BetaApp.TextInputLayout"
@@ -58,7 +56,6 @@
                     android:textSize="16sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Поле ввода для пароля -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/passwordLayout"
                 style="@style/Widget.BetaApp.TextInputLayout"
@@ -79,7 +76,6 @@
                     android:textSize="16sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Поле для подтверждения пароля -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/confirmPasswordLayout"
                 style="@style/Widget.BetaApp.TextInputLayout"
@@ -100,7 +96,6 @@
                     android:textSize="16sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Кнопка регистрации -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/registerButton"
                 style="@style/Widget.BetaApp.Button.Primary"
@@ -113,7 +108,6 @@
                 android:text="@string/register_button"
                 android:textSize="16sp" />
 
-            <!-- Кнопка для перехода к логину -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/loginButton"
                 style="@style/Widget.BetaApp.Button.Secondary"
@@ -126,7 +120,6 @@
                 android:text="@string/login_button"
                 android:textSize="16sp" />
 
-            <!-- Прогресс-бар -->
             <ProgressBar
                 android:id="@+id/progressBar"
                 style="?android:attr/progressBarStyle"

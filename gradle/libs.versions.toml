@@ -16,10 +16,10 @@ lifecycleLivedataKtx = "2.8.7"
 lifecycleViewmodelKtx = "2.8.7"
 navigationFragmentKtx = "2.8.9"
 navigationUiKtx = "2.8.9"
-gridlayoutVersion = "1.1.0-beta01"
+gridlayoutVersion = "1.1.0-rc01"
 okhttp = "5.0.0-alpha.14"
 ucrop = "2.2.10"
-material3 = "1.4.0-alpha10"
+material3 = "1.4.0-alpha11"
 preferenceKtx = "1.2.1"
 
 [libraries]

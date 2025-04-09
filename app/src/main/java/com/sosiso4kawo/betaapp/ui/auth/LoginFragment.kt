@@ -1,5 +1,8 @@
+@file:Suppress("SameParameterValue")
+
 package com.sosiso4kawo.betaapp.ui.auth
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.text.Editable
@@ -22,6 +25,7 @@ import com.sosiso4kawo.betaapp.databinding.FragmentLoginBinding
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
+@Suppress("SameParameterValue")
 class LoginFragment : Fragment() {
 
     private var _binding: FragmentLoginBinding? = null
@@ -178,6 +182,7 @@ class LoginFragment : Fragment() {
     private fun startCodeTimer(sendCodeButton: MaterialButton) {
         codeTimer?.cancel()
         codeTimer = object : CountDownTimer(60000, 1000) {
+            @SuppressLint("SetTextI18n")
             override fun onTick(millisUntilFinished: Long) {
                 sendCodeButton.text = "Отправить код (${millisUntilFinished / 1000}s)"
             }

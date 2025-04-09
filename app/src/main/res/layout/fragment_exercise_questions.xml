@@ -31,7 +31,7 @@
             android:id="@+id/tvQuestionText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Вопрос"
+            android:text="@string/question_label"
             android:textAppearance="?attr/textAppearanceHeadline6" />
 
         <!-- ImageView для картинки вопроса -->
@@ -40,6 +40,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:adjustViewBounds="true"
+            android:contentDescription="@string/question_image_description"
             android:scaleType="centerInside"
             android:visibility="gone"
             android:layout_marginTop="8dp" />
@@ -55,7 +56,7 @@
             android:id="@+id/btnNext"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Следующий"
+            android:text="@string/next_button"
             android:layout_marginTop="24dp" />
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

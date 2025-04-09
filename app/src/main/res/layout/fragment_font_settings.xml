@@ -1,30 +1,24 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- Превью с примером текста -->
     <TextView
         android:id="@+id/previewText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Пример текста"
+        android:text="@string/preview_text"
         android:textSize="16sp"
         android:padding="8dp" />
 
-    <!-- Тумблер: системный размер текста -->
     <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/systemFontSizeSwitch"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Системный размер текста"
+        android:text="@string/system_font_size"
         android:padding="8dp" />
 
-    <!-- Ползунок для выбора размера (от 12sp до 20sp с шагом 2sp) -->
     <com.google.android.material.slider.Slider
         android:id="@+id/fontSizeSlider"
         android:layout_width="match_parent"
@@ -35,8 +29,8 @@
         android:value="16"
         android:padding="8dp" />
 
-    <!-- Контейнер для кнопок -->
     <LinearLayout
+        style="?android:attr/buttonBarStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -45,15 +39,17 @@
 
         <Button
             android:id="@+id/cancelButton"
+            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Отмена" />
+            android:text="@string/cancel" />
 
         <Button
             android:id="@+id/applyButton"
+            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Применить"
+            android:text="@string/apply"
             android:layout_marginStart="16dp" />
     </LinearLayout>
 </LinearLayout>

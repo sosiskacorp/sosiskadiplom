@@ -1,16 +1,15 @@
+@file:Suppress("DEPRECATION")
+
 package com.sosiso4kawo.betaapp.ui.profile
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.appcompat.widget.SwitchCompat
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -19,8 +18,8 @@ import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.sosiso4kawo.betaapp.R
-import com.sosiso4kawo.betaapp.databinding.FragmentProfileBinding
 import com.sosiso4kawo.betaapp.data.repository.UserRepository
+import com.sosiso4kawo.betaapp.databinding.FragmentProfileBinding
 import com.sosiso4kawo.betaapp.ui.auth.AuthUiState
 import com.sosiso4kawo.betaapp.ui.auth.AuthViewModel
 import com.sosiso4kawo.betaapp.ui.settings.FontSettingsBottomSheetFragment
@@ -137,6 +136,7 @@ class ProfileFragment : Fragment(), KoinComponent {
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private fun loadProfile() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -173,6 +173,7 @@ class ProfileFragment : Fragment(), KoinComponent {
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private fun loadProgress() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {

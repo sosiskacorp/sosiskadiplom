@@ -1,5 +1,6 @@
 package com.sosiso4kawo.betaapp.ui.exercises
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -33,6 +34,7 @@ class QuestionDetailFragment : Fragment() {
         loadQuestionDetail()
     }
 
+    @SuppressLint("SetTextI18n")
     private fun loadQuestionDetail() {
         questionUuid?.let { uuid ->
             lifecycleScope.launch {
