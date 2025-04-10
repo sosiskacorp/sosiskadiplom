@@ -3,7 +3,6 @@ package com.sosiso4kawo.betaapp.ui.custom
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
-import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
 import androidx.core.content.ContextCompat
@@ -18,7 +17,7 @@ class StreakCircleView @JvmOverloads constructor(
     private val circlePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
         color = ContextCompat.getColor(context, R.color.streak_circle_background)
-        alpha = 128 // 50% transparency
+        alpha = 128 // 50% прозрачности
     }
 
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -27,7 +26,6 @@ class StreakCircleView @JvmOverloads constructor(
     }
 
     private var streakCount = 0
-    private val rect = RectF()
 
     fun setStreak(count: Int) {
         streakCount = count
@@ -35,7 +33,7 @@ class StreakCircleView @JvmOverloads constructor(
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val size = 300 // Default size in pixels
+        val size = 300 // Стандартный размер в пикселях
         val width = resolveSize(size, widthMeasureSpec)
         val height = resolveSize(size, heightMeasureSpec)
         setMeasuredDimension(width, height)
@@ -48,14 +46,14 @@ class StreakCircleView @JvmOverloads constructor(
         val centerY = height / 2f
         val radius = (minOf(width, height) / 2f) * 0.8f
 
-        // Draw circle
+        // Рисуем круг
         canvas.drawCircle(centerX, centerY, radius, circlePaint)
 
-        // Draw streak number
+        // Рисуем число стрика
         textPaint.textSize = radius * 0.5f
         canvas.drawText(streakCount.toString(), centerX, centerY - radius * 0.1f, textPaint)
 
-        // Draw "дней подряд"
+        // Рисуем подпись "дней подряд"
         textPaint.textSize = radius * 0.2f
         canvas.drawText(
             getDaysText(streakCount),

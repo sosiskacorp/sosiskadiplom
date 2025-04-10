@@ -12,6 +12,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.POST
+import retrofit2.http.Query
 
 interface ExercisesService {
     @GET("v1/exercise/{uuid}/info")
@@ -23,23 +24,20 @@ interface ExercisesService {
     @GET("v1/question/{uuid}/info")
     suspend fun getQuestion(@Path("uuid") uuid: String): Response<Question>
 
-    @POST("v1/question/{uuid}/check")
-    suspend fun checkAnswer(@Path("uuid") uuid: String, @Body answer: Any): Response<CheckResponse>
-
     @POST("v1/attempts/start/{exerciseUuid}")
     suspend fun startAttempt(
         @Path("exerciseUuid") exerciseUuid: String
     ): Response<StartAttemptResponse>
 
-    @POST("v1/attempts/{sessionId}/answer")
+    @POST("v1/attempts/answer")
     suspend fun submitAnswer(
-        @Path("sessionId") sessionId: String,
+        @Query("session_id") sessionId: String,
         @Body answerRequest: AnswerRequest
     ): Response<CheckResponse>
 
-    @POST("v1/attempts/{sessionId}/finish")
+    @POST("v1/attempts/finish")
     suspend fun finishAttempt(
-        @Path("sessionId") sessionId: String,
+        @Query("session_id") sessionId: String,
         @Body finishAttempt: FinishAttemptRequest
     ): Response<FinishAttemptResponse>
 }

@@ -17,7 +17,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Круг для отображения streak -->
+    <!-- Круг для отображения days -->
     <com.sosiso4kawo.betaapp.ui.custom.StreakCircleView
         android:id="@+id/streak_circle"
         android:layout_width="wrap_content"

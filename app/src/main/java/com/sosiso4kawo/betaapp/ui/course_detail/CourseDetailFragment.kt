@@ -21,6 +21,8 @@ import com.sosiso4kawo.betaapp.ui.lessons.LessonsAdapter
 import com.sosiso4kawo.betaapp.util.SessionManager
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class CourseDetailFragment : Fragment() {
 
@@ -64,6 +66,7 @@ class CourseDetailFragment : Fragment() {
         setupInitialViews()
         loadLessons()
         loadProgress()
+        loadStreak() // загрузка стрика для отображения в круге
     }
 
     private fun setupInitialViews() {
@@ -83,14 +86,14 @@ class CourseDetailFragment : Fragment() {
         binding.startLearningButton.apply {
             text = getString(R.string.start_learning)
             setOnClickListener {
-                Log.d("CourseDetailFragment", "Learning button clicked")
+                Log.d("CourseDetailFragment", "Кнопка обучения нажата")
             }
         }
 
         // Установка заголовка курса
         binding.tvLessonsHeader.text = courseTitle
 
-        // Настройка списка уроков – создаём адаптер с передачей callback для обработки нажатия
+        // Настройка списка уроков – создание адаптера с callback для обработки нажатия
         binding.rvLessons.layoutManager = GridLayoutManager(
             requireContext(),
             3,
@@ -111,18 +114,15 @@ class CourseDetailFragment : Fragment() {
     private fun onLessonClick(lesson: Lesson) {
         val bundle = Bundle().apply { putString("lessonUuid", lesson.uuid) }
         if (completedLessons.contains(lesson.uuid)) {
-            // Урок пройден – переходим к фрагменту с контентом урока
             findNavController().navigate(R.id.lessonContentFragment, bundle)
         } else {
-            // Урок не пройден – открываем диалоговое окно с информацией об уроке
-            val dialog = LessonInfoDialogFragment().apply {
-                arguments = bundle
-            }
+            val dialog = LessonInfoDialogFragment().apply { arguments = bundle }
             dialog.show(requireActivity().supportFragmentManager, "LessonInfoDialog")
         }
     }
+
     /**
-     * Загрузка уроков курса.
+     * Загрузка уроков курса с последующей сортировкой по ордеру.
      */
     @SuppressLint("NotifyDataSetChanged")
     private fun loadLessons() {
@@ -134,14 +134,16 @@ class CourseDetailFragment : Fragment() {
             try {
                 val response = coursesService.getCourseContent(courseUuid!!)
                 if (response.isSuccessful && response.body() != null) {
+                    // Очищаем список и добавляем уроки, сортируя их по полю order
                     lessonsList.clear()
-                    lessonsList.addAll(response.body()!!)
+                    val sortedLessons = response.body()!!.sortedBy { it.order }
+                    lessonsList.addAll(sortedLessons)
                     lessonsAdapter?.notifyDataSetChanged()
                 } else {
-                    Log.e("CourseDetailFragment", "Error loading lessons: ${response.code()}")
+                    Log.e("CourseDetailFragment", "Ошибка загрузки уроков: ${response.code()}")
                 }
             } catch (e: Exception) {
-                Log.e("CourseDetailFragment", "Exception while loading lessons", e)
+                Log.e("CourseDetailFragment", "Исключение при загрузке уроков", e)
             }
         }
     }
@@ -165,10 +167,32 @@ class CourseDetailFragment : Fragment() {
                     progress.lessons.forEach { completedLessons.add(it.lesson_uuid) }
                     lessonsAdapter?.notifyDataSetChanged()
                 } else {
-                    Log.e("CourseDetailFragment", "Error loading progress: ${response.code()}")
+                    Log.e("CourseDetailFragment", "Ошибка загрузки прогресса: ${response.code()}")
                 }
             } catch (e: Exception) {
-                Log.e("CourseDetailFragment", "Exception while loading progress", e)
+                Log.e("CourseDetailFragment", "Исключение при загрузке прогресса", e)
+            }
+        }
+    }
+
+    /**
+     * Загрузка стрика пользователя.
+     */
+    private fun loadStreak() {
+        lifecycleScope.launch {
+            try {
+                val token = sessionManager.getAccessToken() ?: return@launch
+                val response = userService.getStreak("Bearer $token")
+                if (response.isSuccessful) {
+                    val streak = response.body()?.days ?: 0
+                    withContext(Dispatchers.Main) {
+                        binding.streakCircle.setStreak(streak)
+                    }
+                } else {
+                    Log.e("CourseDetailFragment", "Ошибка загрузки стрика: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                Log.e("CourseDetailFragment", "Исключение при загрузке стрика: ${e.message}")
             }
         }
     }

@@ -34,7 +34,7 @@ class HomeFragment : Fragment() {
     private lateinit var coursesAdapter: CoursesAdapter
     private val coursesList = mutableListOf<Course>()
 
-    // Создаём сервис курсов через Retrofit
+    // Сервисы
     private val coursesService: CoursesService by inject()
     private val userService: UserService by inject()
     private val sessionManager: SessionManager by inject()
@@ -46,6 +46,8 @@ class HomeFragment : Fragment() {
     ): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         setupInitialViews()
+        loadStreak()
+        loadCoursesWithProgress()
         return binding.root
     }
 
@@ -55,6 +57,7 @@ class HomeFragment : Fragment() {
             findViewById<android.widget.ImageButton>(R.id.notification_button)?.visibility = View.VISIBLE
             setOnNotificationClickListener { }
         }
+        // Изначально выставляем стрик равным 0 до загрузки данных
         binding.streakCircle.setStreak(0)
         setupLearningButton()
         setupCoursesSection()
@@ -76,7 +79,7 @@ class HomeFragment : Fragment() {
     private fun setupCoursesSection() {
         binding.rvCourses.apply {
             layoutManager = LinearLayoutManager(context)
-            binding.rvCourses.addItemDecoration(
+            addItemDecoration(
                 DividerItemDecoration(
                     requireContext(),
                     LinearLayoutManager.VERTICAL
@@ -91,7 +94,6 @@ class HomeFragment : Fragment() {
             showCourseDialog(course)
         }
         binding.rvCourses.adapter = coursesAdapter
-        loadCoursesWithProgress()
     }
 
     private fun showCourseDialog(course: Course) {
@@ -117,7 +119,8 @@ class HomeFragment : Fragment() {
             try {
                 val token = sessionManager.getAccessToken() ?: return@launch
                 val courses = coursesService.getCourses().body() ?: emptyList()
-                val progress = userService.getProgress("Bearer $token").body() ?: ProgressResponse(emptyList(), emptyList(), emptyList())
+                val progress = userService.getProgress("Bearer $token").body()
+                    ?: ProgressResponse(emptyList(), emptyList(), emptyList())
 
                 progressMap = courses.associate { course ->
                     val lessons = coursesService.getCourseContent(course.uuid).body() ?: emptyList()
@@ -139,6 +142,28 @@ class HomeFragment : Fragment() {
             }
         }
     }
+
+    // Метод загрузки стрика пользователя
+    private fun loadStreak() {
+        lifecycleScope.launch {
+            try {
+                val token = sessionManager.getAccessToken() ?: return@launch
+                val response = userService.getStreak("Bearer $token")
+                if (response.isSuccessful) {
+                    val streakResponse = response.body()
+                    val streak = streakResponse?.days ?: 0
+                    withContext(Dispatchers.Main) {
+                        binding.streakCircle.setStreak(streak)
+                    }
+                } else {
+                    Log.e("HomeFragment", "Ошибка загрузки стрика: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                Log.e("HomeFragment", "Исключение при загрузке стрика: ${e.message}")
+            }
+        }
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

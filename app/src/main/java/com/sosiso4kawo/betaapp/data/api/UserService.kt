@@ -2,6 +2,7 @@ package com.sosiso4kawo.betaapp.data.api
 
 import com.sosiso4kawo.betaapp.data.model.LeaderboardResponse
 import com.sosiso4kawo.betaapp.data.model.ProgressResponse
+import com.sosiso4kawo.betaapp.data.model.StreakResponse
 import com.sosiso4kawo.betaapp.data.model.UpdateProfileRequest
 import com.sosiso4kawo.betaapp.data.model.User
 import okhttp3.MultipartBody
@@ -45,7 +46,11 @@ interface UserService {
         @Header("Authorization") token: String
     ): Response<User>
 
-    // Новый метод для получения прогресса пользователя
+    // Метод для получения прогресса пользователя
     @GET("v1/users/me/progress")
     suspend fun getProgress(@Header("Authorization") token: String): Response<ProgressResponse>
+
+    // Новый метод для получения стрика пользователя
+    @GET("v1/users/me/streak")
+    suspend fun getStreak(@Header("Authorization") token: String): Response<StreakResponse>
 }
