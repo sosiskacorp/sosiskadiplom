@@ -28,4 +28,5 @@
     <dimen name="bottom_nav_height">64dp</dimen>
     <dimen name="bottom_nav_item_icon_size">24dp</dimen>
     <dimen name="bottom_nav_item_text_size">12sp</dimen>
+    <dimen name="bottom_margin">80dp</dimen>
 </resources>

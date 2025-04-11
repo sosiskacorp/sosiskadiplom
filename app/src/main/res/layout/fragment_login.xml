@@ -36,7 +36,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintWidth_percent="0.9"
-                android:layout_marginTop="@dimen/padding_large"/>
+                android:layout_marginTop="@dimen/padding_large" />
 
             <!-- Поле ввода для логина -->
             <com.google.android.material.textfield.TextInputLayout
@@ -106,7 +106,23 @@
                 android:text="@string/register_button"
                 android:textSize="16sp" />
 
+            <!-- Элемент "Забыли пароль?" помещён под кнопкой регистрации -->
+
             <!-- Прогресс-бар -->
+            <TextView
+                android:id="@+id/forgotPasswordText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="232dp"
+                android:layout_marginTop="12dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:text="@string/forgotPassword"
+                android:textColor="@color/orange"
+                android:textSize="14sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/registerButton" />
+
             <ProgressBar
                 android:id="@+id/progressBar"
                 style="?android:attr/progressBarStyle"
