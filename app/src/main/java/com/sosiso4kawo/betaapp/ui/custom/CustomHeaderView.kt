@@ -35,7 +35,10 @@ class CustomHeaderView @JvmOverloads constructor(
     }
 
     fun setProgress(progress: Int) {
-        binding.progressBar.progress = progress
+        binding.progressBar.apply {
+            this.progress = progress
+            visibility = View.VISIBLE
+        }
     }
 
     fun showNotificationButton(show: Boolean = true) {

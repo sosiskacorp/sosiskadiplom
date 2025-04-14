@@ -86,7 +86,7 @@ class CourseDetailFragment : Fragment() {
         binding.startLearningButton.apply {
             text = getString(R.string.start_learning)
             setOnClickListener {
-                Log.d("CourseDetailFragment", "Кнопка обучения нажата")
+                handleStartLearningClick()
             }
         }
 
@@ -104,6 +104,40 @@ class CourseDetailFragment : Fragment() {
             onLessonClick(lesson)
         }
         binding.rvLessons.adapter = lessonsAdapter
+    }
+
+    /**
+     * Обрабатывает нажатие на кнопку "Начать обучение" или "Продолжить обучение".
+     * Находит первый непройденный урок и открывает диалог с информацией о нем.
+     */
+    private fun handleStartLearningClick() {
+        Log.d("CourseDetailFragment", "Кнопка обучения нажата")
+
+        if (lessonsList.isEmpty()) {
+            Log.d("CourseDetailFragment", "Список уроков пуст")
+            return
+        }
+
+        // Сортируем уроки по порядку и находим первый непройденный
+        val firstUncompletedLesson = lessonsList
+            .sortedBy { it.order }
+            .firstOrNull { !completedLessons.contains(it.uuid) }
+
+        // Если все уроки завершены, берем последний урок в курсе
+        val targetLesson = firstUncompletedLesson ?: lessonsList.sortedBy { it.order }.last()
+
+        Log.d("CourseDetailFragment", "Выбран урок: ${targetLesson.title}, UUID: ${targetLesson.uuid}")
+
+        // Переходим к диалогу информации об уроке, если урок не завершен
+        // Иначе - сразу к содержимому урока
+        if (completedLessons.contains(targetLesson.uuid)) {
+            val bundle = Bundle().apply { putString("lessonUuid", targetLesson.uuid) }
+            findNavController().navigate(R.id.lessonContentFragment, bundle)
+        } else {
+            val bundle = Bundle().apply { putString("lessonUuid", targetLesson.uuid) }
+            val dialog = LessonInfoDialogFragment().apply { arguments = bundle }
+            dialog.show(requireActivity().supportFragmentManager, "LessonInfoDialog")
+        }
     }
 
     /**
@@ -139,6 +173,11 @@ class CourseDetailFragment : Fragment() {
                     val sortedLessons = response.body()!!.sortedBy { it.order }
                     lessonsList.addAll(sortedLessons)
                     lessonsAdapter?.notifyDataSetChanged()
+
+                    // Обновляем прогрессбар после загрузки списка уроков
+                    updateProgressBar()
+                    // Обновляем кнопку обучения в зависимости от прогресса
+                    updateStartLearningButton()
                 } else {
                     Log.e("CourseDetailFragment", "Ошибка загрузки уроков: ${response.code()}")
                 }
@@ -149,7 +188,7 @@ class CourseDetailFragment : Fragment() {
     }
 
     /**
-     * Загрузка прогресса пользователя – формирование набора завершённых уроков.
+     * Загрузка прогресса пользователя – формирование набора завершённых уроков и обновление прогрессбара.
      */
     @SuppressLint("NotifyDataSetChanged")
     private fun loadProgress() {
@@ -165,6 +204,13 @@ class CourseDetailFragment : Fragment() {
                     val progress: ProgressResponse = response.body()!!
                     completedLessons.clear()
                     progress.lessons.forEach { completedLessons.add(it.lesson_uuid) }
+
+                    // Обновляем прогрессбар на основе процента завершенных уроков в текущем курсе
+                    updateProgressBar()
+                    // Обновляем кнопку обучения в зависимости от прогресса
+                    updateStartLearningButton()
+
+                    // Уведомляем адаптер о изменениях
                     lessonsAdapter?.notifyDataSetChanged()
                 } else {
                     Log.e("CourseDetailFragment", "Ошибка загрузки прогресса: ${response.code()}")
@@ -172,6 +218,43 @@ class CourseDetailFragment : Fragment() {
             } catch (e: Exception) {
                 Log.e("CourseDetailFragment", "Исключение при загрузке прогресса", e)
             }
+        }
+    }
+
+    /**
+     * Обновление прогрессбара на основе текущего прогресса по курсу
+     */
+    private suspend fun updateProgressBar() {
+        if (lessonsList.isEmpty()) return
+
+        val completedLessonsCount = lessonsList.count { lesson ->
+            completedLessons.contains(lesson.uuid)
+        }
+
+        val progressPercentage = if (lessonsList.isNotEmpty()) {
+            (completedLessonsCount * 100) / lessonsList.size
+        } else {
+            0
+        }
+
+        withContext(Dispatchers.Main) {
+            binding.header.setProgress(progressPercentage)
+        }
+    }
+
+    /**
+     * Обновление текста и функционала кнопки "Начать/Продолжить обучение"
+     * в зависимости от прогресса пользователя
+     */
+    private suspend fun updateStartLearningButton() {
+        val completedLessonsCount = lessonsList.count { completedLessons.contains(it.uuid) }
+        val hasStartedLearning = completedLessonsCount > 0
+
+        withContext(Dispatchers.Main) {
+            binding.startLearningButton.text = getString(
+                if (hasStartedLearning) R.string.continue_learning
+                else R.string.start_learning
+            )
         }
     }
 

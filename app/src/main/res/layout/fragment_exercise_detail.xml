@@ -14,28 +14,43 @@
             android:id="@+id/tvExerciseTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Название упражнения"
+            android:text="@string/exerciseName"
             android:textAppearance="?attr/textAppearanceHeadline6" />
+
+        <HorizontalScrollView
+            android:id="@+id/mediaScrollView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:id="@+id/mediaContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="4dp"/>
+        </HorizontalScrollView>
 
         <TextView
             android:id="@+id/tvExerciseDescription"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Описание упражнения"
+            android:text="@string/exerciseDescription"
             android:layout_marginTop="8dp" />
 
         <TextView
             android:id="@+id/tvExercisePoints"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Points"
+            android:text="@string/points"
             android:layout_marginTop="4dp" />
 
         <Button
             android:id="@+id/btnLoadQuestions"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Загрузить вопросы"
+            android:text="@string/loadQuestions"
             android:layout_marginTop="16dp" />
     </LinearLayout>
 </ScrollView>

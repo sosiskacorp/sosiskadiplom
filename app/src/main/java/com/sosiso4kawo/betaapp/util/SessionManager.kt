@@ -20,7 +20,6 @@ class SessionManager(context: Context) {
     }
 
     fun saveTokens(accessToken: String, refreshToken: String, expiresIn: Long) {
-        // expiresIn передаётся в секундах, переводим в миллисекунды
         val expiryTime = System.currentTimeMillis() + expiresIn * 1000
         prefs.edit().apply {
             putString(KEY_ACCESS_TOKEN, accessToken)
@@ -37,9 +36,7 @@ class SessionManager(context: Context) {
 
     fun getTokenExpiry(): Long = prefs.getLong(KEY_TOKEN_EXPIRY, 0)
 
-    fun isAccessTokenExpired(): Boolean {
-        return System.currentTimeMillis() >= getTokenExpiry()
-    }
+    fun isAccessTokenExpired(): Boolean = System.currentTimeMillis() >= getTokenExpiry()
 
     fun clearSession() {
         prefs.edit().clear().apply()

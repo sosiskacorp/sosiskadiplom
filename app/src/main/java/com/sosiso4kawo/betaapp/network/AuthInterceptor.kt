@@ -6,7 +6,6 @@ import android.util.Log
 import com.sosiso4kawo.betaapp.data.repository.AuthRepository
 import com.sosiso4kawo.betaapp.util.SessionManager
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.flow.first
 import okhttp3.Interceptor
 import okhttp3.Response
 import org.koin.core.component.KoinComponent
@@ -21,13 +20,14 @@ class AuthInterceptor(
         @Volatile
         private var isRefreshing = false
         private const val BACKOFF_TIME = 1000L
-        private const val REFRESH_THRESHOLD = 60 * 1000L
+        private const val REFRESH_THRESHOLD = 60 * 1000L // 60 секунд
     }
 
     override fun intercept(chain: Interceptor.Chain): Response {
         var request = chain.request()
         val path = request.url.encodedPath
-        // Исключаем эндпоинты логина, регистрации и обновления токена из обработки перехватчиком
+
+        // Пропускаем эндпоинты логина, регистрации и обновления токена
         if (path.contains("v1/auth/login") ||
             path.contains("v1/auth/register") ||
             path.contains("v1/auth/refresh")) {
@@ -38,7 +38,6 @@ class AuthInterceptor(
         val tokenExpiry = sessionManager.getTokenExpiry()
         val timeLeft = tokenExpiry - currentTime
         Log.d("AuthInterceptor", "Текущее время: $currentTime, время истечения токена: $tokenExpiry, осталось: $timeLeft мс")
-        // Если осталось менее 60 секунд до истечения, инициируем обновление токена
         if (timeLeft < REFRESH_THRESHOLD) {
             Log.d("AuthInterceptor", "Осталось менее 60 секунд до истечения токена. Инициируем обновление токена.")
             synchronized(this) {
@@ -59,7 +58,6 @@ class AuthInterceptor(
                 }
             }
         }
-        // Добавляем access token, если он есть
         sessionManager.getAccessToken()?.let { token ->
             request = request.newBuilder()
                 .header("Authorization", "Bearer $token")
@@ -71,7 +69,6 @@ class AuthInterceptor(
         }
 
         var response = chain.proceed(request)
-        // Если получен 401 и запрос ещё не был повторен – пробуем обновить токен и повторить запрос
         if (response.code == 401 && request.header("X-Retry") == null) {
             Log.d("AuthInterceptor", "Получен 401, пытаемся обновить токен и повторить запрос.")
             response.close()
@@ -108,15 +105,15 @@ class AuthInterceptor(
             logout()
             return
         }
-
         try {
-            val result = get<AuthRepository>().refreshToken(refreshToken).first()
-            result.getOrNull()?.let {
-                sessionManager.saveTokens(it.access_token, it.refresh_token, 604800L)
-                Log.d("AuthInterceptor", "Токен успешно обновлён.")
-            } ?: run {
-                Log.e("AuthInterceptor", "Не удалось получить токен после обновления.")
-                logout()
+            val result = get<AuthRepository>().refreshToken(refreshToken)
+            result.let {
+                if (it is com.sosiso4kawo.betaapp.util.Result.Success<*>) {
+                    Log.d("AuthInterceptor", "Токен успешно обновлён.")
+                } else {
+                    Log.e("AuthInterceptor", "Не удалось получить токен после обновления.")
+                    logout()
+                }
             }
         } catch (e: Exception) {
             Log.e("AuthInterceptor", "Ошибка обновления токена: ${e.message}")

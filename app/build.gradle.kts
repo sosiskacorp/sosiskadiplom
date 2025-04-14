@@ -65,6 +65,12 @@ dependencies {
     implementation(libs.ucrop)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.preference.ktx)
+    implementation(libs.pdfium.android) {
+        exclude(group = "com.android.support")
+    }
+    implementation(libs.exoplayer) {
+        exclude(group = "com.android.support")
+    }
     annotationProcessor(libs.compiler)
 
     testImplementation(libs.junit)

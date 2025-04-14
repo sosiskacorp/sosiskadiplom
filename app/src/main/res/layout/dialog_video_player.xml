@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Макет для просмотра видео файлов -->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black">
+
+    <!-- PlayerView от ExoPlayer для воспроизведения видео -->
+    <com.google.android.exoplayer2.ui.PlayerView
+        android:id="@+id/videoPlayer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Кнопка закрытия видеоплеера -->
+    <ImageView
+        android:id="@+id/ivCloseVideo"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_alignParentEnd="true"
+        android:layout_margin="16dp"
+        android:background="@drawable/circle_background"
+        android:contentDescription="@string/close"
+        android:padding="12dp"
+        android:src="@drawable/ic_close" />
+
+</RelativeLayout>

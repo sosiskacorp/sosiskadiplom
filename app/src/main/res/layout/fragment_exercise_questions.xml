@@ -45,6 +45,16 @@
             android:visibility="gone"
             android:layout_marginTop="8dp" />
 
+        <!-- Контейнер для отображения дополнительных медиа (PDF, видео, изображения) -->
+        <LinearLayout
+            android:id="@+id/mediaContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            android:padding="8dp"
+            android:layout_marginTop="8dp" />
+
         <LinearLayout
             android:id="@+id/optionsContainer"
             android:layout_width="match_parent"
