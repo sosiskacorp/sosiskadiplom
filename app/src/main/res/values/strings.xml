@@ -79,4 +79,13 @@
     <string name="save_changes">Сохранить</string>
     <string name="forgotPassword">Забыли пароль?</string>
     <string name="update_avatar">Обновление аватара</string>
+    <string name="pdfimage">pdfImage</string>
+    <string name="backButton">Назад</string>
+    <string name="pageNum">Страница 1 из 1</string>
+    <string name="next">Дальше</string>
+    <string name="exitbutton">exitButton</string>
+    <string name="exerciseName">Название упражнения</string>
+    <string name="exerciseDescription">Описание упражнения</string>
+    <string name="points">Points</string>
+    <string name="loadQuestions">Загрузить вопросы</string>
 </resources>
