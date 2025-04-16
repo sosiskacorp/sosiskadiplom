@@ -71,6 +71,8 @@ dependencies {
     implementation(libs.exoplayer) {
         exclude(group = "com.android.support")
     }
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.lifecycle.process)
     annotationProcessor(libs.compiler)
 
     testImplementation(libs.junit)
