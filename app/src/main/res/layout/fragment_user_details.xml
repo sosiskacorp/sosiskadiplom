@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.sosiso4kawo.betaapp.ui.custom.CustomHeaderView
+    <com.sosiso4kawo.zschoolapp.ui.custom.CustomHeaderView
         android:id="@+id/header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -31,7 +31,7 @@
             android:id="@+id/loginTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Логин"
+            android:text="@string/login"
             app:layout_constraintTop_toBottomOf="@id/avatarImageView"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -41,7 +41,7 @@
             android:id="@+id/fullNameTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="ФИО"
+            android:text="@string/FullName"
             app:layout_constraintTop_toBottomOf="@id/loginTextView"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

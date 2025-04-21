@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "BetaApp"
+rootProject.name = "Z-SchoolApp"
 include(":app")

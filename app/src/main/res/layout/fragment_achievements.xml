@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.sosiso4kawo.betaapp.ui.custom.CustomHeaderView
+    <com.sosiso4kawo.zschoolapp.ui.custom.CustomHeaderView
         android:id="@+id/header"
         android:layout_width="0dp"
         android:layout_height="wrap_content"

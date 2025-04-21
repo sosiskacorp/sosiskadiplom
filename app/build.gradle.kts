@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.sosiso4kawo.betaapp"
+    namespace = "com.sosiso4kawo.zschoolapp"
     compileSdk = 35
 
     defaultConfig {

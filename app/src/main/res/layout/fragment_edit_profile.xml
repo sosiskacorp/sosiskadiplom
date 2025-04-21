@@ -5,7 +5,7 @@
     android:orientation="vertical">
 
     <!-- Хэдер -->
-    <com.sosiso4kawo.betaapp.ui.custom.CustomHeaderView
+    <com.sosiso4kawo.zschoolapp.ui.custom.CustomHeaderView
         android:id="@+id/header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -9,7 +9,7 @@
     <!-- Фрагменты авторизации и регистрации -->
     <fragment
         android:id="@+id/navigation_login"
-        android:name="com.sosiso4kawo.betaapp.ui.auth.LoginFragment"
+        android:name="com.sosiso4kawo.zschoolapp.ui.auth.LoginFragment"
         android:label="Login"
         tools:layout="@layout/fragment_login">
         <action
@@ -23,7 +23,7 @@
     </fragment>
     <fragment
         android:id="@+id/navigation_register"
-        android:name="com.sosiso4kawo.betaapp.ui.auth.RegisterFragment"
+        android:name="com.sosiso4kawo.zschoolapp.ui.auth.RegisterFragment"
         android:label="Register"
         tools:layout="@layout/fragment_register">
         <action
@@ -39,7 +39,7 @@
     <!-- Главный экран -->
     <fragment
         android:id="@+id/navigation_home"
-        android:name="com.sosiso4kawo.betaapp.ui.home.HomeFragment"
+        android:name="com.sosiso4kawo.zschoolapp.ui.home.HomeFragment"
         android:label="@string/title_home"
         tools:layout="@layout/fragment_home">
         <action
@@ -50,7 +50,7 @@
     <!-- Детали курса -->
     <fragment
         android:id="@+id/navigation_course_detail"
-        android:name="com.sosiso4kawo.betaapp.ui.course_detail.CourseDetailFragment"
+        android:name="com.sosiso4kawo.zschoolapp.ui.course_detail.CourseDetailFragment"
         android:label="Course Detail"
         tools:layout="@layout/fragment_course_detail">
         <argument
@@ -64,7 +64,7 @@
     <!-- Прочие фрагменты (рейтинг, достижения, профиль и т.д.) -->
     <fragment
         android:id="@+id/navigation_rating"
-        android:name="com.sosiso4kawo.betaapp.ui.rating.RatingFragment"
+        android:name="com.sosiso4kawo.zschoolapp.ui.rating.RatingFragment"
         android:label="@string/title_rating"
         tools:layout="@layout/fragment_rating">
         <action
@@ -73,12 +73,12 @@
     </fragment>
     <fragment
         android:id="@+id/navigation_achievements"
-        android:name="com.sosiso4kawo.betaapp.ui.achievements.AchievementsFragment"
+        android:name="com.sosiso4kawo.zschoolapp.ui.achievements.AchievementsFragment"
         android:label="@string/title_achievements"
         tools:layout="@layout/fragment_achievements" />
     <fragment
         android:id="@+id/navigation_profile"
-        android:name="com.sosiso4kawo.betaapp.ui.profile.ProfileFragment"
+        android:name="com.sosiso4kawo.zschoolapp.ui.profile.ProfileFragment"
         android:label="@string/title_profile"
         tools:layout="@layout/fragment_profile">
         <action
@@ -87,21 +87,21 @@
     </fragment>
     <fragment
         android:id="@+id/navigation_edit_profile"
-        android:name="com.sosiso4kawo.betaapp.ui.profile.EditProfileFragment"
+        android:name="com.sosiso4kawo.zschoolapp.ui.profile.EditProfileFragment"
         android:label="Edit Profile"
         tools:layout="@layout/fragment_edit_profile" />
 
     <!-- Фрагмент деталей пользователя -->
     <fragment
         android:id="@+id/userDetailsFragment"
-        android:name="com.sosiso4kawo.betaapp.ui.userdetails.UserDetailsFragment"
+        android:name="com.sosiso4kawo.zschoolapp.ui.userdetails.UserDetailsFragment"
         android:label="User Details"
         tools:layout="@layout/fragment_user_details" />
 
     <!-- Фрагмент диалога с информацией об уроке (если урок не завершён) -->
     <fragment
         android:id="@+id/lessonInfoDialogFragment"
-        android:name="com.sosiso4kawo.betaapp.ui.lessons.LessonInfoDialogFragment"
+        android:name="com.sosiso4kawo.zschoolapp.ui.lessons.LessonInfoDialogFragment"
         android:label="Информация об уроке"
         tools:layout="@layout/fragment_lesson_info">
         <argument
@@ -112,7 +112,7 @@
     <!-- Фрагмент с контентом урока (список упражнений) -->
     <fragment
         android:id="@+id/lessonContentFragment"
-        android:name="com.sosiso4kawo.betaapp.ui.lessons.LessonContentFragment"
+        android:name="com.sosiso4kawo.zschoolapp.ui.lessons.LessonContentFragment"
         android:label="Контент урока"
         tools:layout="@layout/fragment_lesson_content">
         <argument
@@ -128,7 +128,7 @@
     <!-- Фрагменты упражнений -->
     <fragment
         android:id="@+id/exerciseDetailFragment"
-        android:name="com.sosiso4kawo.betaapp.ui.exercises.ExerciseDetailFragment"
+        android:name="com.sosiso4kawo.zschoolapp.ui.exercises.ExerciseDetailFragment"
         android:label="Детали упражнения"
         tools:layout="@layout/fragment_exercise_detail">
         <argument
@@ -137,7 +137,7 @@
     </fragment>
     <fragment
         android:id="@+id/exerciseQuestionsFragment"
-        android:name="com.sosiso4kawo.betaapp.ui.exercises.ExerciseQuestionsFragment"
+        android:name="com.sosiso4kawo.zschoolapp.ui.exercises.ExerciseQuestionsFragment"
         android:label="Вопросы упражнения"
         tools:layout="@layout/fragment_exercise_questions">
         <argument
@@ -157,7 +157,7 @@
 
     <fragment
         android:id="@+id/lessonCompletionFragment"
-        android:name="com.sosiso4kawo.betaapp.ui.lessons.LessonCompletionFragment"
+        android:name="com.sosiso4kawo.zschoolapp.ui.lessons.LessonCompletionFragment"
         android:label="Итог урока"
         tools:layout="@layout/fragment_lesson_completion">
         <argument

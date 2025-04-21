@@ -9,7 +9,7 @@
     tools:context=".ui.home.HomeFragment">
 
     <!-- Header -->
-    <com.sosiso4kawo.betaapp.ui.custom.CustomHeaderView
+    <com.sosiso4kawo.zschoolapp.ui.custom.CustomHeaderView
         android:id="@+id/header"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -18,7 +18,7 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Круг для отображения days -->
-    <com.sosiso4kawo.betaapp.ui.custom.StreakCircleView
+    <com.sosiso4kawo.zschoolapp.ui.custom.StreakCircleView
         android:id="@+id/streak_circle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
