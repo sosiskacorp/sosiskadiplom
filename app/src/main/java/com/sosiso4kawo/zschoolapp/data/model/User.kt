@@ -6,5 +6,7 @@ data class User(
     val name: String?,
     val last_name: String?,
     val second_name: String?,
-    val avatar: String? // URL аватара
+    val avatar: String?, // URL аватара
+    val total_points: Int,
+    val finished_courses: Int
 )

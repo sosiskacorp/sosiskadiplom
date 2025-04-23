@@ -21,7 +21,6 @@ import com.sosiso4kawo.zschoolapp.databinding.FragmentAchievementsBinding
 import com.sosiso4kawo.zschoolapp.util.SessionManager
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
-import retrofit2.Retrofit
 
 class AchievementsFragment : Fragment() {
 
@@ -32,12 +31,9 @@ class AchievementsFragment : Fragment() {
     private var _binding: FragmentAchievementsBinding? = null
     private val binding get() = _binding!!
 
-    private val retrofit: Retrofit by inject()
     private val sessionManager: SessionManager by inject()
 
-    private val achievementsService: AchievementsService by lazy {
-        retrofit.create(AchievementsService::class.java)
-    }
+    private val achievementsService: AchievementsService by inject()
 
     private val token: String by lazy {
         "Bearer " + sessionManager.getAccessToken()

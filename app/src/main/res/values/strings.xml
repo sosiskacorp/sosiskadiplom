@@ -89,4 +89,5 @@
     <string name="points">Points</string>
     <string name="loadQuestions">Загрузить вопросы</string>
     <string name="FullName">ФИО</string>
+    <string name="achieved">Достижений: 0/0</string>
 </resources>

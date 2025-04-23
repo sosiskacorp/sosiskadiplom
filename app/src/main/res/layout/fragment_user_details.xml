@@ -22,16 +22,17 @@
             android:id="@+id/avatarImageView"
             android:layout_width="100dp"
             android:layout_height="100dp"
+            android:contentDescription="@string/avatar"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:contentDescription="@string/avatar" />
+            app:layout_constraintEnd_toEndOf="parent" />
 
         <TextView
             android:id="@+id/loginTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/login"
+            android:textSize="16sp"
             app:layout_constraintTop_toBottomOf="@id/avatarImageView"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -42,11 +43,68 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/FullName"
+            android:textSize="16sp"
             app:layout_constraintTop_toBottomOf="@id/loginTextView"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="8dp" />
+        <LinearLayout
+            android:id="@+id/progressContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:padding="12dp"
+            android:background="@drawable/orange_border"
+            android:orientation="vertical"
+            android:gravity="start"
+            app:layout_constraintTop_toBottomOf="@id/fullNameTextView"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
 
+            <!-- Новый заголовок -->
+            <TextView
+                android:id="@+id/tvProgressLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/totalProgress"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/orange"
+                android:gravity="start"
+                android:textAlignment="viewStart"
+                android:layout_marginBottom="8dp"/>
+
+            <!-- Количество поинтов -->
+            <TextView
+                android:id="@+id/totalPointsTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/totalPoints"
+                android:textSize="16sp"
+                android:gravity="start"
+                android:textAlignment="viewStart"/>
+
+            <!-- Количество курсов -->
+            <TextView
+                android:id="@+id/completedCoursesTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/completedCourses"
+                android:textSize="16sp"
+                android:layout_marginTop="8dp"
+                android:gravity="start"
+                android:textAlignment="viewStart"/>
+
+            <!-- Достижения -->
+            <TextView
+                android:id="@+id/achievementsTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/achieved"
+                android:textSize="16sp"
+                android:layout_marginTop="8dp"
+                android:gravity="start"
+                android:textAlignment="viewStart"/>
+        </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
-
 </androidx.constraintlayout.widget.ConstraintLayout>
