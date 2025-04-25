@@ -6,9 +6,16 @@ import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Color
+import android.graphics.pdf.PdfRenderer
 import android.net.Uri
+import android.os.ParcelFileDescriptor
+import android.os.ParcelFileDescriptor.MODE_READ_ONLY
+import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import com.github.chrisbanes.photoview.PhotoView
 import android.util.TypedValue
 import android.view.LayoutInflater
+import android.view.ScaleGestureDetector
 import android.view.ViewGroup
 import android.view.Window
 import android.widget.*
@@ -17,14 +24,11 @@ import com.bumptech.glide.Glide
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.ui.PlayerView
-import com.shockwave.pdfium.PdfDocument
-import com.shockwave.pdfium.PdfiumCore
 import com.sosiso4kawo.zschoolapp.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.IOException
-import java.net.HttpURLConnection
+import java.io.File
 import java.net.URL
 
 object MediaHelper {
@@ -47,96 +51,90 @@ object MediaHelper {
     fun showFullScreenImage(context: Context, imageUrl: String) {
         val dialog = Dialog(context, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        val fullScreenImageView = ImageView(context).apply {
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
+        // используем PhotoView вместо ImageView
+        val photoView = PhotoView(context).apply {
+            layoutParams = ViewGroup.LayoutParams(MATCH_PARENT, MATCH_PARENT)
+            maximumScale = 5f  // макс zoom
+            minimumScale = 1f
             scaleType = ImageView.ScaleType.FIT_CENTER
         }
-        Glide.with(context)
-            .load(imageUrl)
-            .into(fullScreenImageView)
-        fullScreenImageView.setOnClickListener { dialog.dismiss() }
-        dialog.setContentView(fullScreenImageView)
+        Glide.with(context).load(imageUrl).into(photoView)
+        photoView.setOnClickListener { dialog.dismiss() }
+        dialog.setContentView(photoView)
         dialog.show()
     }
 
     @SuppressLint("InflateParams", "SetTextI18n")
-    fun showPdfViewer(context: Context, pdfUrl: String, lifecycleScope: LifecycleCoroutineScope) {
+    fun showPdfViewer(
+        context: Context,
+        pdfUrl: String,
+        lifecycleScope: LifecycleCoroutineScope
+    ) {
         val dialog = Dialog(context, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         val view = LayoutInflater.from(context).inflate(R.layout.dialog_pdf_viewer, null)
-        val pdfImageView = view.findViewById<ImageView>(R.id.pdfImageView)
-        val closeButton = view.findViewById<ImageView>(R.id.ivClosePdf)
-        val prevButton = view.findViewById<Button>(R.id.btnPrevPage)
-        val nextButton = view.findViewById<Button>(R.id.btnNextPage)
-        val pageNumberText = view.findViewById<TextView>(R.id.tvPageNumber)
-
+        val pdfView       = view.findViewById<PhotoView>(R.id.pdfImageView)
+        val closeButton   = view.findViewById<ImageView>(R.id.ivClosePdf)
+        val prevButton    = view.findViewById<Button>(R.id.btnPrevPage)
+        val nextButton    = view.findViewById<Button>(R.id.btnNextPage)
+        val pageNumberTxt = view.findViewById<TextView>(R.id.tvPageNumber)
         closeButton.setOnClickListener { dialog.dismiss() }
 
         lifecycleScope.launch {
+            // скачиваем и открываем PDF, как раньше…
+            val pdfFile: File = withContext(Dispatchers.IO) {
+                val bytes = URL(pdfUrl).openStream().use { it.readBytes() }
+                val file = File(context.cacheDir, "temp.pdf")
+                file.writeBytes(bytes)
+                file
+            }
+            val pfd      = ParcelFileDescriptor.open(pdfFile, MODE_READ_ONLY)
+            val renderer = PdfRenderer(pfd)
             var currentPage = 0
-            var pdfiumCore: PdfiumCore? = null
-            var pdfDocument: PdfDocument? = null
-            try {
-                val pdfBytes = withContext(Dispatchers.IO) {
-                    val url = URL(pdfUrl)
-                    val connection = url.openConnection() as HttpURLConnection
-                    connection.inputStream.use { it.readBytes() }
-                }
-                pdfiumCore = PdfiumCore(context)
-                pdfDocument = pdfiumCore.newDocument(pdfBytes)
-                val pageCount = pdfiumCore.getPageCount(pdfDocument)
-                pageNumberText.text = "Страница ${currentPage + 1} из $pageCount"
+            val pageCount   = renderer.pageCount
 
-                prevButton.isEnabled = false
-                nextButton.isEnabled = pageCount > 1
+            fun renderPage() {
+                renderer.openPage(currentPage).use { page ->
+                    val metrics = context.resources.displayMetrics
 
-                fun renderPage() {
-                    pdfiumCore.let { core ->
-                        pdfDocument?.let { document ->
-                            try {
-                                core.openPage(document, currentPage)
-                                val width = core.getPageWidthPoint(document, currentPage)
-                                val height = core.getPageHeightPoint(document, currentPage)
-                                val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-                                core.renderPageBitmap(document, bitmap, currentPage, 0, 0, width, height)
-                                pdfImageView.setImageBitmap(bitmap)
-                                pageNumberText.text = "Страница ${currentPage + 1} из $pageCount"
-                            } catch (e: Exception) {
-                                Toast.makeText(context, "Ошибка отображения PDF", Toast.LENGTH_SHORT).show()
-                            }
-                        }
+                    // 1) Ширина экрана в пикселях
+                    val screenWidth = metrics.widthPixels
+
+                    // 2) Соотношение сторон PDF-страницы (ширина/высота)
+                    val aspectRatio = page.height.toFloat() / page.width.toFloat()
+
+                    // 3) Рассчитываем размер Bitmap: ширина = экран, высота = по аспекту
+                    val width  = screenWidth
+                    val height = (screenWidth * aspectRatio).toInt()
+
+                    // 4) Создаём Bitmap и рендерим в режиме "для печати"
+                    val bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                    page.render(bmp, null, null, PdfRenderer.Page.RENDER_MODE_FOR_PRINT)
+
+                    // 5) Ставим белый фон и показываем
+                    pdfView.apply {
+                        setBackgroundColor(Color.WHITE)
+                        setImageBitmap(bmp)
+                        // Чтобы по умолчанию вместилось по ширине
+                        minimumScale = 1f
+                        scaleType   = ImageView.ScaleType.FIT_CENTER
+                        // Можно сразу подогнать scale, но у PhotoView по умолчанию FIT_CENTER = scale-to-fit
                     }
+
+                    pageNumberTxt.text = "Стр. ${currentPage + 1} из $pageCount"
                 }
-
-                prevButton.setOnClickListener {
-                    if (currentPage > 0) {
-                        currentPage--
-                        renderPage()
-                        nextButton.isEnabled = true
-                        prevButton.isEnabled = currentPage > 0
-                    }
-                }
-
-                nextButton.setOnClickListener {
-                    if (currentPage < pageCount - 1) {
-                        currentPage++
-                        renderPage()
-                        prevButton.isEnabled = true
-                        nextButton.isEnabled = currentPage < pageCount - 1
-                    }
-                }
-
-                renderPage()
-
-            } catch (e: IOException) {
-                Toast.makeText(context, "Ошибка загрузки PDF: ${e.message}", Toast.LENGTH_LONG).show()
             }
 
+            prevButton.setOnClickListener {
+                if (currentPage>0) { currentPage--; renderPage() }
+            }
+            nextButton.setOnClickListener {
+                if (currentPage<pageCount-1) { currentPage++; renderPage() }
+            }
+
+            renderPage()
             dialog.setOnDismissListener {
-                pdfiumCore?.closeDocument(pdfDocument)
+                renderer.close(); pfd.close(); pdfFile.delete()
             }
         }
 
@@ -144,7 +142,7 @@ object MediaHelper {
         dialog.show()
     }
 
-    @SuppressLint("InflateParams")
+    @SuppressLint("InflateParams", "ClickableViewAccessibility")
     fun showVideoPlayer(context: Context, videoUrl: String) {
         val dialog = Dialog(context, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
@@ -153,14 +151,31 @@ object MediaHelper {
         val closeButton = view.findViewById<ImageView>(R.id.ivCloseVideo)
         closeButton.setOnClickListener { dialog.dismiss() }
 
-        val exoPlayer = ExoPlayer.Builder(context).build().apply {
+        // 1) устанавливаем плеер
+        val exo = ExoPlayer.Builder(context).build().apply {
             setMediaItem(MediaItem.fromUri(Uri.parse(videoUrl)))
-            playWhenReady = true
-            prepare()
+            playWhenReady = true; prepare()
         }
-        playerView.player = exoPlayer
+        playerView.player = exo
 
-        dialog.setOnDismissListener { exoPlayer.release() }
+        // 2) ScaleGestureDetector для зума
+        val scaleDetector = ScaleGestureDetector(context,
+            object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+                override fun onScale(detector: ScaleGestureDetector): Boolean {
+                    // ограничиваем масштабы
+                    val scale = (playerView.scaleX * detector.scaleFactor).coerceIn(0.5f, 3f)
+                    playerView.scaleX = scale
+                    playerView.scaleY = scale
+                    return true
+                }
+            }
+        )
+        // 3) ловим тач на корневом вью
+        view.setOnTouchListener { _, event ->
+            scaleDetector.onTouchEvent(event); true
+        }
+
+        dialog.setOnDismissListener { exo.release() }
         dialog.setContentView(view)
         dialog.show()
     }

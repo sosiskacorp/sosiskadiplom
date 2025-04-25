@@ -5,7 +5,7 @@
     android:background="@android:color/black">
 
     <!-- ImageView для отображения страниц PDF -->
-    <ImageView
+    <com.github.chrisbanes.photoview.PhotoView
         android:id="@+id/pdfImageView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

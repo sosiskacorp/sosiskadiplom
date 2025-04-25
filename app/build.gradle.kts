@@ -8,7 +8,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.sosiso4kawo.betaapp"
+        applicationId = "com.sosiso4kawo.zschoolapp"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
@@ -19,13 +19,15 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled   = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -65,12 +67,8 @@ dependencies {
     implementation(libs.ucrop)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.preference.ktx)
-    implementation(libs.pdfium.android) {
-        exclude(group = "com.android.support")
-    }
-    implementation(libs.exoplayer) {
-        exclude(group = "com.android.support")
-    }
+    implementation(libs.exoplayer)
+    implementation(libs.photoview)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.lifecycle.process)
     annotationProcessor(libs.compiler)
