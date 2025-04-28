@@ -18,6 +18,11 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
+import android.graphics.drawable.Drawable
+import android.util.Log
 import com.sosiso4kawo.zschoolapp.R
 import com.sosiso4kawo.zschoolapp.data.api.ExercisesService
 import com.sosiso4kawo.zschoolapp.data.api.LessonsService
@@ -31,6 +36,8 @@ import com.sosiso4kawo.zschoolapp.util.MediaHelper
 import com.sosiso4kawo.zschoolapp.util.dpToPx
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
+import com.sosiso4kawo.zschoolapp.ui.custom.MatchingView
+import com.sosiso4kawo.zschoolapp.ui.custom.MatchingListener
 
 @Suppress("DEPRECATION")
 class ExerciseQuestionsFragment : Fragment() {
@@ -55,8 +62,8 @@ class ExerciseQuestionsFragment : Fragment() {
     // Для множественного выбора
     private var selectedAnswers: MutableSet<String> = mutableSetOf()
     // Для вопросов с сопоставлением:
-    private var selectedLeftButton: Button? = null
     private var matchedPairs: MutableMap<String, String> = mutableMapOf()
+    private var matchingView: MatchingView? = null
 
     // UI элементы
     private lateinit var tvQuestionText: TextView
@@ -136,6 +143,34 @@ class ExerciseQuestionsFragment : Fragment() {
             }
         }
         loadQuestions()
+    }
+
+    private fun createGlideListener(url: String?): RequestListener<Drawable> {
+        return object : RequestListener<Drawable> {
+            override fun onLoadFailed(
+                e: GlideException?,
+                model: Any?,
+                target: Target<Drawable>,
+                isFirstResource: Boolean
+            ): Boolean {
+                // Логируем ошибку Glide более подробно
+                Log.e("GlideError", "Failed to load image: $url", e)
+                // Возвращаем false, чтобы Glide вызвал .error() placeholder
+                return false
+            }
+
+            override fun onResourceReady(
+                resource: Drawable,
+                model: Any,
+                target: Target<Drawable>?,
+                dataSource: com.bumptech.glide.load.DataSource,
+                isFirstResource: Boolean
+            ): Boolean {
+                Log.d("GlideSuccess", "Successfully loaded image: $url")
+                // Возвращаем false, чтобы Glide обработал изображение дальше (показал его)
+                return false
+            }
+        }
     }
 
     private suspend fun handleNextExercise(lessonId: String, currentExerciseId: String) {
@@ -256,7 +291,6 @@ class ExerciseQuestionsFragment : Fragment() {
 
         selectedAnswer = null
         selectedAnswers.clear()
-        selectedLeftButton = null
         matchedPairs.clear()
         btnNext.visibility = View.GONE
 
@@ -289,8 +323,11 @@ class ExerciseQuestionsFragment : Fragment() {
             ivQuestionImage.scaleType = ImageView.ScaleType.FIT_CENTER
             Glide.with(this)
                 .load(mainImageUrl)
+                .error(R.drawable.ic_image_placeholder) // <<< Добавлено: плейсхолдер при ошибке
+                .listener(createGlideListener(mainImageUrl)) // <<< Добавлено: листенер для логирования
                 .into(ivQuestionImage)
             ivQuestionImage.setOnClickListener {
+                // Передаем URL в функцию показа
                 MediaHelper.showFullScreenImage(requireContext(), mainImageUrl)
             }
         } else {
@@ -323,8 +360,10 @@ class ExerciseQuestionsFragment : Fragment() {
                             url.endsWith(".mkv", ignoreCase = true) -> {
                         val videoThumbnail = MediaHelper.createThumbnailImageView(requireContext(), R.drawable.ic_video_placeholder)
                         Glide.with(this)
-                            .load(url)
-                            .thumbnail(0.1f)
+                            .load(url) // Загружаем превью для видео (если возможно)
+                            .error(R.drawable.ic_video_placeholder) // Ошибка загрузки превью
+                            .listener(createGlideListener(url)) // Логируем ошибку превью
+                            .thumbnail(0.1f) // Показываем миниатюру
                             .into(videoThumbnail)
                         videoThumbnail.setOnClickListener {
                             MediaHelper.showVideoPlayer(requireContext(), url)
@@ -335,8 +374,11 @@ class ExerciseQuestionsFragment : Fragment() {
                         val imageThumbnail = MediaHelper.createThumbnailImageView(requireContext(), R.drawable.ic_image_placeholder)
                         Glide.with(this)
                             .load(url)
+                            .error(R.drawable.ic_image_placeholder) // <<< Добавлено: плейсхолдер при ошибке
+                            .listener(createGlideListener(url))      // <<< Добавлено: листенер для логирования
                             .into(imageThumbnail)
                         imageThumbnail.setOnClickListener {
+                            // Передаем URL в функцию показа
                             MediaHelper.showFullScreenImage(requireContext(), url)
                         }
                         mediaContainer.addView(imageThumbnail)
@@ -416,120 +458,36 @@ class ExerciseQuestionsFragment : Fragment() {
                     })
                 }
             }
-            3 -> { // Сопоставление
+            3 -> { // Сопоставление (новый вариант с MatchingView)
+                optionsContainer.removeAllViews() // Очищаем контейнер
+
                 val leftItems = question.matching?.leftSide.orEmpty()
                 val rightItemsOriginal = question.matching?.rightSide.orEmpty()
+
                 if (leftItems.isEmpty() || rightItemsOriginal.isEmpty()) {
                     optionsContainer.addView(TextView(requireContext()).apply {
                         text = "Нет данных для сопоставления"
                     })
                 } else {
-                    val horizontalContainer = LinearLayout(requireContext()).apply {
-                        orientation = LinearLayout.HORIZONTAL
+                    matchingView = MatchingView(requireContext()).apply {
                         layoutParams = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
-                            LinearLayout.LayoutParams.WRAP_CONTENT
-                        )
-                    }
-                    val horizontalMargin = requireContext().dpToPx(8)
-                    val buttonMinHeight = requireContext().dpToPx(48)
-                    val leftContainer = LinearLayout(requireContext()).apply {
-                        orientation = LinearLayout.VERTICAL
-                        layoutParams = LinearLayout.LayoutParams(
-                            0,
-                            LinearLayout.LayoutParams.WRAP_CONTENT,
-                            1f
-                        ).apply { setMargins(0, 0, horizontalMargin, 0) }
-                    }
-                    val rightContainer = LinearLayout(requireContext()).apply {
-                        orientation = LinearLayout.VERTICAL
-                        layoutParams = LinearLayout.LayoutParams(
-                            0,
-                            LinearLayout.LayoutParams.WRAP_CONTENT,
-                            1f
-                        ).apply { setMargins(horizontalMargin, 0, 0, 0) }
-                    }
-                    leftItems.forEach { leftItem ->
-                        val leftButton = Button(requireContext()).apply {
-                            text = leftItem
-                            tag = leftItem
-                            gravity = Gravity.START or Gravity.CENTER_VERTICAL
-                            maxLines = 3
-                            setBackgroundResource(R.drawable.button_unselected)
-                            val params = LinearLayout.LayoutParams(
-                                LinearLayout.LayoutParams.MATCH_PARENT,
-                                LinearLayout.LayoutParams.WRAP_CONTENT
-                            ).apply {
-                                minimumHeight = buttonMinHeight
-                                setMargins(0, 8, 0, 8)
-                            }
-                            layoutParams = params
-                            setPadding(
-                                requireContext().dpToPx(12),
-                                requireContext().dpToPx(8),
-                                requireContext().dpToPx(12),
-                                requireContext().dpToPx(8)
-                            )
-                            setOnClickListener {
-                                val leftKey = tag as String
-                                if (selectedLeftButton == this) {
-                                    selectedLeftButton = null
-                                    setBackgroundResource(R.drawable.button_unselected)
-                                    return@setOnClickListener
-                                }
-                                if (matchedPairs.containsKey(leftKey)) {
-                                    matchedPairs.remove(leftKey)
-                                    btnNext.visibility = if (matchedPairs.size == leftItems.size) View.VISIBLE else View.GONE
-                                    return@setOnClickListener
-                                }
-                                selectedLeftButton?.setBackgroundResource(R.drawable.button_unselected)
-                                selectedLeftButton = this
-                                setBackgroundResource(R.drawable.button_selected)
+                            LinearLayout.LayoutParams.WRAP_CONTENT // Высота будет определена внутри
+                        ).apply { setMargins(0, context.dpToPx(16), 0, context.dpToPx(16)) } // Добавим отступы
+
+                        // Устанавливаем listener для обновления кнопки "Далее"
+                        listener = object : MatchingListener {
+                            override fun onMatchChanged(isComplete: Boolean) {
+                                // Показываем кнопку "Далее" только когда все пары сопоставлены
+                                btnNext.visibility = if (isComplete) View.VISIBLE else View.GONE
                             }
                         }
-                        leftContainer.addView(leftButton)
+                        // Передаем данные в MatchingView
+                        setItems(leftItems, rightItemsOriginal)
                     }
-                    rightItemsOriginal.shuffled().forEach { rightItem ->
-                        val rightButton = Button(requireContext()).apply {
-                            text = rightItem
-                            tag = rightItem
-                            gravity = Gravity.START or Gravity.CENTER_VERTICAL
-                            maxLines = 3
-                            setBackgroundResource(R.drawable.button_unselected)
-                            val params = LinearLayout.LayoutParams(
-                                LinearLayout.LayoutParams.MATCH_PARENT,
-                                LinearLayout.LayoutParams.WRAP_CONTENT
-                            ).apply {
-                                minimumHeight = buttonMinHeight
-                                setMargins(0, 8, 0, 8)
-                            }
-                            layoutParams = params
-                            setPadding(
-                                requireContext().dpToPx(12),
-                                requireContext().dpToPx(8),
-                                requireContext().dpToPx(12),
-                                requireContext().dpToPx(8)
-                            )
-                            setOnClickListener {
-                                val rightValue = tag as String
-                                if (selectedLeftButton == null) {
-                                    Toast.makeText(requireContext(), "Выберите элемент слева", Toast.LENGTH_SHORT).show()
-                                    return@setOnClickListener
-                                } else {
-                                    val leftValue = selectedLeftButton?.tag as String
-                                    matchedPairs[leftValue] = rightValue
-                                    selectedLeftButton?.setBackgroundResource(R.drawable.button_selected)
-                                    setBackgroundResource(R.drawable.button_selected)
-                                    selectedLeftButton = null
-                                    btnNext.visibility = if (matchedPairs.size == leftItems.size) View.VISIBLE else View.GONE
-                                }
-                            }
-                        }
-                        rightContainer.addView(rightButton)
-                    }
-                    horizontalContainer.addView(leftContainer)
-                    horizontalContainer.addView(rightContainer)
-                    optionsContainer.addView(horizontalContainer)
+                    optionsContainer.addView(matchingView)
+                    // Сразу проверяем, может быть, по умолчанию все сопоставлено (хотя вряд ли)
+                    btnNext.visibility = if (matchingView?.isComplete() == true) View.VISIBLE else View.GONE
                 }
             }
             else -> {
@@ -541,35 +499,81 @@ class ExerciseQuestionsFragment : Fragment() {
     }
 
     private suspend fun processAndCheckAnswerForCurrentQuestion(): Boolean {
+        if (currentQuestionIndex >= questions.size) return false // Добавим проверку индекса
         val currentQuestion = questions[currentQuestionIndex]
-        val answerBody = when (currentQuestion.type_id) {
-            1 -> currentQuestion.uuid to selectedAnswer!!
-            2 -> currentQuestion.uuid to selectedAnswers.toList()
-            3 -> currentQuestion.uuid to matchedPairs
-            else -> return false
+        val answerBodyPair: Pair<String, Any>? = when (currentQuestion.type_id) {
+            1 -> {
+                if (selectedAnswer == null) return false // Не выбран ответ
+                currentQuestion.uuid to selectedAnswer!!
+            }
+            2 -> {
+                if (selectedAnswers.isEmpty()) return false // Не выбраны ответы
+                currentQuestion.uuid to selectedAnswers.toList()
+            }
+            3 -> {
+                // Получаем сопоставленные пары из MatchingView
+                val currentMatches = matchingView?.getMatchedPairs() ?: emptyMap()
+                // Важно: сохраняем полученные пары в переменную фрагмента,
+                // если это нужно для других целей, но для отправки используем currentMatches
+                matchedPairs = currentMatches.toMutableMap()
+                if (! (matchingView?.isComplete() ?: false)) return false // Не все сопоставлено
+                currentQuestion.uuid to currentMatches // Отправляем Map<String, String>
+            }
+            else -> null // Неизвестный тип вопроса
         }
-        sessionId?.let { sessionId ->
-            try {
-                val request = AnswerRequest(
-                    questionId = answerBody.first,
-                    answer = answerBody.second
-                )
-                val response = exercisesService.submitAnswer(sessionId, request)
-                if (response.isSuccessful) {
-                    response.body()?.let { body ->
-                        return if (body.correct) {
-                            correctAnswersCount++
-                            true
-                        } else {
-                            false
-                        }
-                    }
-                }
-            } catch (_: Exception) { }
-        }
-        return false
-    }
 
+        if (answerBodyPair == null) {
+            // Можно показать Toast или лог, что тип вопроса не поддерживается или нет ответа
+            println("Ошибка: Не удалось сформировать тело ответа для вопроса ${currentQuestion.uuid}, тип ${currentQuestion.type_id}")
+            return false
+        }
+
+        // Проверяем наличие sessionId
+        val currentSessionId = sessionId
+        if (currentSessionId == null) {
+            println("Ошибка: sessionId is null")
+            Toast.makeText(requireContext(), "Ошибка сессии. Попробуйте перезапустить упражнение.", Toast.LENGTH_SHORT).show()
+            // Возможно, стоит прервать выполнение и выйти
+            navigateToHome() // Например, вернуться домой
+            return false
+        }
+
+
+        // Отправка ответа на сервер
+        try {
+            val request = AnswerRequest(
+                questionId = answerBodyPair.first,
+                answer = answerBodyPair.second // Any, т.к. может быть String, List<String> или Map<String, String>
+            )
+            println("Отправка ответа: SessionId=$currentSessionId, Request=$request") // Логирование запроса
+
+            val response = exercisesService.submitAnswer(currentSessionId, request)
+
+            println("Ответ сервера: Code=${response.code()}, Success=${response.isSuccessful}, Body=${response.body()}, ErrorBody=${response.errorBody()?.string()}") // Логирование ответа
+
+
+            if (response.isSuccessful && response.body() != null) {
+                val isCorrect = response.body()!!.correct
+                if (isCorrect) {
+                    correctAnswersCount++
+                }
+                // Можно добавить визуальную обратную связь здесь, если нужно
+                // Например, подсветить MatchingView зеленым/красным ненадолго
+                return isCorrect
+            } else {
+                // Обработка ошибки ответа сервера
+                println("Ошибка отправки ответа: ${response.message()} (Code: ${response.code()})")
+                Toast.makeText(requireContext(), "Не удалось отправить ответ: ${response.message()}", Toast.LENGTH_SHORT).show()
+                return false // Считаем ответ неверным при ошибке сервера
+            }
+        } catch (e: Exception) {
+            // Обработка исключений сети или других ошибок
+            println("Исключение при отправке ответа: ${e.message}")
+            e.printStackTrace() // Вывести стек трейс в лог для детальной отладки
+            Toast.makeText(requireContext(), "Ошибка сети: ${e.message}", Toast.LENGTH_SHORT).show()
+            return false // Считаем ответ неверным при исключении
+        }
+    }
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

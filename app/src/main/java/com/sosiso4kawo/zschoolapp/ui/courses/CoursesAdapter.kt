@@ -38,8 +38,7 @@ class CoursesAdapter(
 
         val (iconRes, iconColor) = when {
             progress >= 100 -> R.drawable.ic_check to android.R.color.holo_green_dark
-            progress > 0 -> R.drawable.ic_star to android.R.color.holo_orange_light
-            else -> R.drawable.ic_lock to android.R.color.darker_gray
+            else -> R.drawable.ic_star to android.R.color.holo_orange_light
         }
 
         holder.statusIcon.apply {
