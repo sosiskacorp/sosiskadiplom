@@ -38,6 +38,10 @@ android {
     buildFeatures {
         viewBinding = true
     }
+
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 dependencies {
@@ -74,6 +78,10 @@ dependencies {
     annotationProcessor(libs.compiler)
 
     testImplementation(libs.junit)
+    testImplementation(libs.junit) // JUnit 4
+    testImplementation(libs.kotlinx.coroutines.test) // Coroutines testing
+    testImplementation(libs.mockk) // MockK for mocking
+    testImplementation(libs.androidx.core.testing)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }
