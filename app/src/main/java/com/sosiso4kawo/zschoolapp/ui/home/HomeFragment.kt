@@ -57,19 +57,17 @@ class HomeFragment : Fragment() {
         }
         // Изначально выставляем стрик равным 0 до загрузки данных
         binding.streakCircle.setStreak(0)
-        setupLearningButton()
+        initializeLearningButton() // Changed from setupLearningButton
         setupCoursesSection()
     }
 
-    private fun setupLearningButton() {
-        val hasStartedLearning = false
+    // Renamed and modified to set initial disabled state
+    private fun initializeLearningButton() {
         binding.startLearningButton.apply {
-            text = getString(
-                if (hasStartedLearning) R.string.continue_learning
-                else R.string.start_learning
-            )
+            text = getString(R.string.start_learning) // Default text
+            isEnabled = false // Disabled until courses load
             setOnClickListener {
-                Log.d("HomeFragment", "Learning button clicked. Status: ${if (hasStartedLearning) "Continue" else "Start"}")
+                Log.d("HomeFragment", "Кнопка обучения нажата (курсы еще не загружены или действие не определено).")
             }
         }
     }
@@ -116,14 +114,18 @@ class HomeFragment : Fragment() {
         lifecycleScope.launch {
             try {
                 val token = sessionManager.getAccessToken() ?: return@launch
-                val courses = coursesService.getCourses().body() ?: emptyList()
-                val progress = userService.getProgress("Bearer $token").body()
+                val coursesResponse = coursesService.getCourses()
+                val courses = coursesResponse.body() ?: emptyList()
+
+                val progressResponse = userService.getProgress("Bearer $token")
+                val progressData = progressResponse.body()
                     ?: ProgressResponse(emptyList(), emptyList(), emptyList())
 
                 progressMap = courses.associate { course ->
-                    val lessons = coursesService.getCourseContent(course.uuid).body() ?: emptyList()
+                    val courseLessonsResponse = coursesService.getCourseContent(course.uuid)
+                    val lessons = courseLessonsResponse.body() ?: emptyList()
                     val completed = lessons.count { lesson ->
-                        progress.lessons.any { it.lesson_uuid == lesson.uuid }
+                        progressData.lessons.any { it.lesson_uuid == lesson.uuid }
                     }
                     val progressValue = if (lessons.isNotEmpty()) (completed * 100) / lessons.size else 0
                     course.uuid to progressValue
@@ -131,12 +133,75 @@ class HomeFragment : Fragment() {
 
                 withContext(Dispatchers.Main) {
                     coursesList.clear()
-                    coursesList.addAll(courses)
+                    coursesList.addAll(courses) // Assuming courses are in desired order
                     coursesAdapter.progressMap = progressMap
                     coursesAdapter.notifyDataSetChanged()
+                    updateLearningButtonState() // Call to update button state
                 }
             } catch (e: Exception) {
                 Log.e("HomeFragment", "Ошибка загрузки данных: ${e.message}")
+                withContext(Dispatchers.Main) {
+                    binding.startLearningButton.text = getString(R.string.start_learning)
+                    binding.startLearningButton.isEnabled = false
+                    Log.e("HomeFragment", "Ошибка загрузки, кнопка обучения отключена.")
+                }
+            }
+        }
+    }
+
+    // New method to update the learning button based on loaded data
+    private fun updateLearningButtonState() {
+        if (coursesList.isEmpty()) {
+            binding.startLearningButton.text = getString(R.string.start_learning)
+            binding.startLearningButton.isEnabled = false
+            binding.startLearningButton.setOnClickListener {
+                Log.d("HomeFragment", "Нет доступных курсов для начала.")
+            }
+            return
+        }
+
+        val targetCourse: Course?
+        var buttonTextRes = R.string.start_learning // Default to start
+
+        // 1. Try to find a course to continue (0 < progress < 100)
+        val courseToContinue = coursesList.firstOrNull { course ->
+            val progress = progressMap[course.uuid] ?: 0
+            progress > 0 && progress < 100
+        }
+
+        if (courseToContinue != null) {
+            targetCourse = courseToContinue
+            buttonTextRes = R.string.continue_learning
+        } else {
+            // 2. If no course to continue, find the first course to start (progress == 0)
+            val courseToStart = coursesList.firstOrNull { course ->
+                (progressMap[course.uuid] ?: 0) == 0
+            }
+            if (courseToStart != null) {
+                targetCourse = courseToStart
+                buttonTextRes = R.string.start_learning
+            } else {
+                // 3. If all courses are 100% completed, or list was not empty but no course matched above,
+                // default to the first course in the list (e.g., for review).
+                // The button text will remain R.string.start_learning (or could be changed to "Повторить")
+                targetCourse = coursesList.firstOrNull()
+                // buttonTextRes is already R.string.start_learning
+            }
+        }
+
+        if (targetCourse != null) {
+            binding.startLearningButton.text = getString(buttonTextRes)
+            binding.startLearningButton.isEnabled = true
+            val finalTargetCourse = targetCourse // Capture for lambda
+            binding.startLearningButton.setOnClickListener {
+                Log.d("HomeFragment", "Кнопка 'Начать/Продолжить обучение' нажата для курса: ${finalTargetCourse.title}")
+                findNavController().navigate(
+                    R.id.action_navigation_home_to_courseDetailFragment,
+                    bundleOf(
+                        "courseUuid" to finalTargetCourse.uuid, // Corrected: use finalTargetCourse
+                        "courseTitle" to finalTargetCourse.title // Corrected: use finalTargetCourse
+                    )
+                )
             }
         }
     }
