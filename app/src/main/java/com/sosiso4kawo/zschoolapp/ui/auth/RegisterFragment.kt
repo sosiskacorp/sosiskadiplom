@@ -8,6 +8,7 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
@@ -27,9 +28,13 @@ class RegisterFragment : Fragment() {
     private var _binding: FragmentRegisterBinding? = null
     private val binding get() = _binding!!
     private val viewModel: AuthViewModel by viewModel()
-
-    // Переменная для отслеживания таймера отправки кода
     private var codeTimer: CountDownTimer? = null
+    private var emailVerificationDialog: AlertDialog? = null
+
+    companion object {
+        private const val CODE_TIMER_DURATION = 60000L // 60 секунд
+        private const val CODE_TIMER_INTERVAL = 1000L // 1 секунда
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -43,7 +48,8 @@ class RegisterFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupViews()
-        observeState()
+        observeAuthState()
+        observeEmailVerificationState()
     }
 
     private fun setupViews() {
@@ -51,12 +57,10 @@ class RegisterFragment : Fragment() {
             val email = binding.emailInput.text.toString()
             val password = binding.passwordInput.text.toString()
             val confirmPassword = binding.confirmPasswordInput.text.toString()
-
             if (validateInput(email, password, confirmPassword)) {
                 viewModel.register(email, password)
             }
         }
-
         binding.loginButton.setOnClickListener {
             findNavController().navigateUp()
         }
@@ -64,37 +68,35 @@ class RegisterFragment : Fragment() {
 
     private fun validateInput(email: String, password: String, confirmPassword: String): Boolean {
         var isValid = true
-
         if (email.isBlank()) {
-            binding.emailLayout.error = "Введите email"
+            binding.emailLayout.error = getString(R.string.error_enter_email)
             isValid = false
         } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            binding.emailLayout.error = "Введите корректный email"
+            binding.emailLayout.error = getString(R.string.error_invalid_email_format)
             isValid = false
         } else {
             binding.emailLayout.error = null
         }
 
         if (password.isBlank()) {
-            binding.passwordLayout.error = "Введите пароль"
+            binding.passwordLayout.error = getString(R.string.error_enter_password)
             isValid = false
         } else if (!isPasswordValid(password)) {
-            binding.passwordLayout.error = "Пароль должен содержать минимум 8 символов, одну заглавную букву, одну маленькую букву, одну цифру и один специальный символ"
+            binding.passwordLayout.error = getString(R.string.error_password_requirements)
             isValid = false
         } else {
             binding.passwordLayout.error = null
         }
 
         if (confirmPassword.isBlank()) {
-            binding.confirmPasswordLayout.error = "Подтвердите пароль"
+            binding.confirmPasswordLayout.error = getString(R.string.error_confirm_password)
             isValid = false
         } else if (password != confirmPassword) {
-            binding.confirmPasswordLayout.error = "Пароли не совпадают"
+            binding.confirmPasswordLayout.error = getString(R.string.error_passwords_do_not_match)
             isValid = false
         } else {
             binding.confirmPasswordLayout.error = null
         }
-
         return isValid
     }
 
@@ -106,7 +108,7 @@ class RegisterFragment : Fragment() {
         return hasUpperCase && hasSpecialChar && hasMinLength && hasNumber
     }
 
-    private fun observeState() {
+    private fun observeAuthState() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
@@ -117,13 +119,11 @@ class RegisterFragment : Fragment() {
                         }
                         is AuthUiState.Success -> {
                             binding.progressBar.visibility = View.GONE
-                            // Убираем toast здесь, чтобы уведомление показывалось позже при подтверждении почты
                             showEmailVerificationDialog(binding.emailInput.text.toString())
                         }
                         is AuthUiState.Error -> {
                             binding.registerButton.isEnabled = true
                             binding.progressBar.visibility = View.GONE
-                            // Выводим ошибку, если регистрация не удалась
                             showError(state.message)
                         }
                         else -> {
@@ -135,19 +135,45 @@ class RegisterFragment : Fragment() {
             }
         }
     }
+    private fun observeEmailVerificationState() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.emailVerificationState.collect { state ->
+                    when (state) {
+                        is EmailVerificationState.Loading -> {
+                            // Можно показать индикатор в диалоге
+                        }
+                        is EmailVerificationState.CodeSent -> {
+                            Toast.makeText(requireContext(), getString(R.string.toast_verification_code_sent), Toast.LENGTH_SHORT).show()
+                        }
+                        is EmailVerificationState.Success -> {
+                            emailVerificationDialog?.dismiss()
+                            // Используем строку с плейсхолдером, если она есть, или просто строку
+                            showSuccess(getString(R.string.toast_email_verified_successfully_redirect_login))
+                            findNavController().navigate(R.id.action_registerFragment_to_loginFragment)
+                        }
+                        is EmailVerificationState.Error -> {
+                            showError(state.message)
+                        }
+                        EmailVerificationState.Idle -> {
+                            // Начальное состояние или после сброса
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 
     private fun showEmailVerificationDialog(email: String) {
         val dialogView = LayoutInflater.from(requireContext())
             .inflate(R.layout.dialog_email_verification, null)
         val codeInputLayout = dialogView.findViewById<TextInputLayout>(R.id.codeInputLayout)
         val codeInput = dialogView.findViewById<TextInputEditText>(R.id.codeInput)
-        val sendCodeButton = dialogView.findViewById<MaterialButton>(R.id.sendCodeButton)
-        val confirmButton = dialogView.findViewById<MaterialButton>(R.id.confirmButton)
+        val sendCodeButton = dialogView.findViewById<MaterialButton>(R.id.sendCodeButton) // Используем MaterialButton
+        val confirmButton = dialogView.findViewById<MaterialButton>(R.id.confirmButton) // Используем MaterialButton
 
-        // Изначально кнопку подтверждения отключаем
         confirmButton.isEnabled = false
-
-        // Добавляем TextWatcher для проверки ввода ровно 6 цифр
         codeInput.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
                 confirmButton.isEnabled = s?.length == 6
@@ -156,76 +182,75 @@ class RegisterFragment : Fragment() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
 
-        val dialog = AlertDialog.Builder(requireContext())
-            .setTitle("Подтверждение почты")
+        emailVerificationDialog = AlertDialog.Builder(requireContext())
+            .setTitle(getString(R.string.dialog_title_email_verification))
             .setView(dialogView)
             .setCancelable(false)
             .create()
 
+        viewModel.sendVerificationCode(email)
+        sendCodeButton.isEnabled = false
+        startCodeTimer(sendCodeButton, getString(R.string.button_send_code_timed), getString(R.string.button_send_code))
+
+
         sendCodeButton.setOnClickListener {
             viewModel.sendVerificationCode(email)
-            // Запускаем таймер на 1 минуту для блокировки кнопки
             sendCodeButton.isEnabled = false
-            startCodeTimer(sendCodeButton)
+            startCodeTimer(sendCodeButton, getString(R.string.button_send_code_timed), getString(R.string.button_send_code))
         }
 
         confirmButton.setOnClickListener {
             val code = codeInput.text.toString()
             if (code.isBlank()) {
-                codeInputLayout.error = "Введите код"
+                codeInputLayout.error = getString(R.string.error_enter_code)
             } else {
                 codeInputLayout.error = null
-                viewModel.verifyEmail(email, code) { success, message ->
-                    if (success) {
-                        // Уведомление выводится после успешного подтверждения кода
-                        showSuccess("Почта подтверждена")
-                        dialog.dismiss()
-                        findNavController().navigate(R.id.action_registerFragment_to_loginFragment)
-                    } else {
-                        showError(message)
-                    }
-                }
+                viewModel.verifyEmail(email, code)
             }
         }
-
-        dialog.show()
+        emailVerificationDialog?.setOnDismissListener {
+            codeTimer?.cancel()
+            viewModel.resetEmailVerificationState()
+        }
+        emailVerificationDialog?.show()
     }
 
-    private fun startCodeTimer(sendCodeButton: MaterialButton) {
+    // Убедимся, что тип Button здесь соответствует тому, что используется в dialog_email_verification.xml (MaterialButton)
+    private fun startCodeTimer(button: MaterialButton, timedTextFormat: String, defaultText: String) {
         codeTimer?.cancel()
-        codeTimer = object : CountDownTimer(60000, 1000) {
+        button.isEnabled = false
+        codeTimer = object : CountDownTimer(CODE_TIMER_DURATION, CODE_TIMER_INTERVAL) {
             @SuppressLint("SetTextI18n")
             override fun onTick(millisUntilFinished: Long) {
-                sendCodeButton.text = "Отправить код (${millisUntilFinished / 1000}s)"
+                button.text = String.format(timedTextFormat, millisUntilFinished / 1000)
             }
             override fun onFinish() {
-                sendCodeButton.text = "Отправить код"
-                sendCodeButton.isEnabled = true
+                button.text = defaultText
+                button.isEnabled = true
             }
         }.start()
     }
 
     private fun showError(message: String) {
-        // Можно заменить на кастомное отображение ошибки
         AlertDialog.Builder(requireContext())
-            .setTitle("Ошибка")
+            .setTitle(getString(R.string.dialog_title_error))
             .setMessage(message)
-            .setPositiveButton("OK", null)
+            .setPositiveButton(getString(R.string.button_ok), null)
             .show()
     }
 
     private fun showSuccess(message: String) {
-        // Можно заменить на кастомное отображение успешного сообщения
         AlertDialog.Builder(requireContext())
-            .setTitle("Успех")
+            .setTitle(getString(R.string.dialog_title_success))
             .setMessage(message)
-            .setPositiveButton("OK", null)
+            .setPositiveButton(getString(R.string.button_ok), null)
             .show()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         codeTimer?.cancel()
+        emailVerificationDialog?.dismiss()
         _binding = null
     }
 }

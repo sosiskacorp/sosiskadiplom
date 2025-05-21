@@ -1,9 +1,12 @@
 package com.sosiso4kawo.zschoolapp.data.repository
 
+import android.content.Context // <<< ИМПОРТ, если передаем контекст
 import android.util.Log
 import com.google.gson.GsonBuilder
+import com.sosiso4kawo.zschoolapp.R // <<< ИМПОРТ для ресурсов
 import com.sosiso4kawo.zschoolapp.data.api.AuthService
 import com.sosiso4kawo.zschoolapp.data.model.AuthError
+import com.sosiso4kawo.zschoolapp.data.model.EmailNotConfirmedException // <<< НОВЫЙ ИМПОРТ
 import com.sosiso4kawo.zschoolapp.data.model.EmailResponse
 import com.sosiso4kawo.zschoolapp.data.model.LoginRequest
 import com.sosiso4kawo.zschoolapp.data.model.AuthResponse
@@ -19,10 +22,10 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 
 class AuthRepository(
+    private val context: Context, // <<< ПРИМЕР: Добавляем контекст
     private val authService: AuthService,
     private val sessionManager: SessionManager
 ) {
-
     suspend fun login(login: String, password: String): Result<AuthResponse> =
         withContext(Dispatchers.IO) {
             try {
@@ -36,7 +39,6 @@ class AuthRepository(
                     "AuthRepository",
                     "Login response: code=${response.code()}, headers=${response.headers()}, raw=${response.raw()}"
                 )
-
                 if (response.isSuccessful) {
                     val body = response.body()
                     if (body != null) {
@@ -58,7 +60,7 @@ class AuthRepository(
                         Result.Success(body)
                     } else {
                         Log.e("AuthRepository", "Login successful but body is null")
-                        Result.Failure(Exception("Успешная авторизация, но сервер вернул пустой ответ"))
+                        Result.Failure(Exception(context.getString(R.string.error_login_success_empty_body_repo)))
                     }
                 } else if (response.code() == 401) {
                     val errorBody = response.errorBody()?.string() ?: ""
@@ -67,34 +69,34 @@ class AuthRepository(
                         val error = gson.fromJson(errorBody, AuthError::class.java)
                         if (error?.message == "email not confirmed") {
                             Log.d("AuthRepository", "Login failed: Email not confirmed")
-                            Result.Failure(Exception("email not confirmed"))
+                            Result.Failure(EmailNotConfirmedException("email not confirmed")) // Используем кастомное исключение
                         } else {
                             Log.e("AuthRepository", "Login unauthorized (401): Invalid credentials")
-                            Result.Failure(Exception("Неверный логин или пароль"))
+                            Result.Failure(Exception(context.getString(R.string.error_invalid_login_or_password_repo)))
                         }
                     } catch (e: Exception) {
                         Log.e("AuthRepository", "Error parsing 401 response: ${e.message}")
-                        Result.Failure(Exception("Неверный логин или пароль"))
+                        Result.Failure(Exception(context.getString(R.string.error_invalid_login_or_password_repo)))
                     }
                 } else {
                     val errorBody = response.errorBody()?.string() ?: ""
                     if (errorBody.contains("Field validation for 'Email' failed on the 'email' tag")) {
-                        Result.Failure(Exception("Неверный формат почты"))
+                        Result.Failure(Exception(context.getString(R.string.error_invalid_email_format_repo)))
                     } else {
                         Log.e(
                             "AuthRepository",
                             "Login error: code=${response.code()}, error=$errorBody, headers=${response.headers()}"
                         )
                         val errorMessage = if (errorBody.isBlank()) {
-                            "Ошибка сервера (${response.code()})"
+                            context.getString(R.string.error_server_with_code_repo, response.code())
                         } else {
                             try {
                                 val gson = GsonBuilder().setLenient().create()
                                 val error = gson.fromJson(errorBody, AuthError::class.java)
-                                error?.message ?: "Ошибка авторизации"
+                                error?.message ?: context.getString(R.string.error_auth_failed_repo)
                             } catch (e: Exception) {
                                 Log.e("AuthRepository", "Error parsing response: ${e.message}, raw error body: $errorBody")
-                                "Ошибка при обработке ответа сервера"
+                                context.getString(R.string.error_parsing_server_response_repo)
                             }
                         }
                         Result.Failure(Exception(errorMessage))
@@ -103,10 +105,10 @@ class AuthRepository(
             } catch (e: Exception) {
                 Log.e("AuthRepository", "Login exception: ${e.message}, cause: ${e.cause}")
                 val errorMessage = when (e) {
-                    is java.net.UnknownHostException -> "Нет подключения к интернету"
-                    is java.net.SocketTimeoutException -> "Превышено время ожидания ответа от сервера"
-                    is com.google.gson.JsonSyntaxException -> "Ошибка при обработке ответа от сервера"
-                    else -> "Ошибка при авторизации: ${e.message}"
+                    is java.net.UnknownHostException -> context.getString(R.string.error_no_internet_connection_repo)
+                    is java.net.SocketTimeoutException -> context.getString(R.string.error_server_timeout_repo)
+                    is com.google.gson.JsonSyntaxException -> context.getString(R.string.error_parsing_server_response_repo)
+                    else -> context.getString(R.string.error_auth_exception_repo, e.message)
                 }
                 Result.Failure(Exception(errorMessage))
             }
@@ -131,16 +133,16 @@ class AuthRepository(
                         Result.Success(body)
                     } else {
                         val errorMessage = if (response.code() == 204) {
-                            "Регистрация успешна"
+                            context.getString(R.string.info_registration_successful_repo)
                         } else {
-                            "Успешная регистрация, но сервер вернул пустой ответ"
+                            context.getString(R.string.error_registration_success_empty_body_repo)
                         }
                         Log.e("AuthRepository", errorMessage)
-                        Result.Failure(Exception(errorMessage))
+                        Result.Failure(Exception(errorMessage)) // Считаем это ошибкой, если тело null, а код не 204
                     }
                 } else if (response.code() == 409) {
                     Log.e("AuthRepository", "Registration conflict (409): User already exists")
-                    Result.Failure(Exception("Пользователь с таким email или логином уже существует"))
+                    Result.Failure(Exception(context.getString(R.string.error_user_already_exists_repo)))
                 } else {
                     val errorBody = response.errorBody()?.string() ?: ""
                     Log.e(
@@ -148,15 +150,15 @@ class AuthRepository(
                         "Registration error: code=${response.code()}, error=$errorBody, headers=${response.headers()}"
                     )
                     val errorMessage = if (errorBody.isBlank()) {
-                        "Ошибка сервера (${response.code()})"
+                        context.getString(R.string.error_server_with_code_repo, response.code())
                     } else {
                         try {
                             val gson = GsonBuilder().setLenient().create()
                             val error = gson.fromJson(errorBody, AuthError::class.java)
-                            error?.message ?: "Ошибка регистрации"
+                            error?.message ?: context.getString(R.string.error_registration_failed_repo)
                         } catch (e: Exception) {
                             Log.e("AuthRepository", "Error parsing response: ${e.message}, raw error body: $errorBody")
-                            "Ошибка при обработке ответа от сервера"
+                            context.getString(R.string.error_parsing_server_response_repo)
                         }
                     }
                     Result.Failure(Exception(errorMessage))
@@ -164,16 +166,15 @@ class AuthRepository(
             } catch (e: Exception) {
                 Log.e("AuthRepository", "Registration exception: ${e.message}, cause: ${e.cause}")
                 val errorMessage = when (e) {
-                    is java.net.UnknownHostException -> "Нет подключения к интернету"
-                    is java.net.SocketTimeoutException -> "Превышено время ожидания ответа от сервера"
-                    is com.google.gson.JsonSyntaxException -> "Сервер вернул некорректный ответ"
-                    else -> "Ошибка при регистрации: ${e.message}"
+                    is java.net.UnknownHostException -> context.getString(R.string.error_no_internet_connection_repo)
+                    is java.net.SocketTimeoutException -> context.getString(R.string.error_server_timeout_repo)
+                    is com.google.gson.JsonSyntaxException -> context.getString(R.string.error_parsing_server_response_repo_malformed)
+                    else -> context.getString(R.string.error_registration_exception_repo, e.message)
                 }
                 Result.Failure(Exception(errorMessage))
             }
         }
 
-    // --- Метод refreshToken ---
     suspend fun refreshToken(refreshToken: String): Result<AuthResponse> =
         withContext(Dispatchers.IO) {
             try {
@@ -199,24 +200,24 @@ class AuthRepository(
                         Result.Success(body)
                     } else {
                         Log.e("AuthRepository", "Token refresh successful but body is null")
-                        Result.Failure(Exception("Ошибка обновления токена: сервер вернул пустой ответ"))
+                        Result.Failure(Exception(context.getString(R.string.error_token_refresh_empty_body_repo)))
                     }
                 } else if (response.code() == 401) {
                     Log.e("AuthRepository", "Token refresh unauthorized (401): Invalid refresh token")
-                    Result.Failure(Exception("Сессия истекла, требуется повторная авторизация"))
+                    Result.Failure(Exception(context.getString(R.string.error_session_expired_relogin_repo)))
                 } else {
                     val errorBody = response.errorBody()?.string() ?: ""
                     Log.e("AuthRepository", "Token refresh error: code=${response.code()}, error=$errorBody")
                     val errorMessage = if (errorBody.isBlank()) {
-                        "Ошибка сервера (${response.code()})"
+                        context.getString(R.string.error_server_with_code_repo, response.code())
                     } else {
                         try {
                             val gson = GsonBuilder().setLenient().create()
                             val error = gson.fromJson(errorBody, AuthError::class.java)
-                            error?.message ?: "Ошибка обновления токена"
+                            error?.message ?: context.getString(R.string.error_token_refresh_failed_repo)
                         } catch (e: Exception) {
                             Log.e("AuthRepository", "Error parsing response: ${e.message}, raw error body: $errorBody")
-                            "Ошибка при обработке ответа от сервера"
+                            context.getString(R.string.error_parsing_server_response_repo)
                         }
                     }
                     Result.Failure(Exception(errorMessage))
@@ -224,40 +225,34 @@ class AuthRepository(
             } catch (e: Exception) {
                 Log.e("AuthRepository", "Token refresh exception: ${e.message}, cause: ${e.cause}")
                 val errorMessage = when (e) {
-                    is java.net.UnknownHostException -> "Нет подключения к интернету"
-                    is java.net.SocketTimeoutException -> "Превышено время ожидания ответа от сервера"
-                    is com.google.gson.JsonSyntaxException -> "Ошибка при обработке ответа от сервера"
-                    else -> "Ошибка при обновлении токена: ${e.message}"
+                    is java.net.UnknownHostException -> context.getString(R.string.error_no_internet_connection_repo)
+                    is java.net.SocketTimeoutException -> context.getString(R.string.error_server_timeout_repo)
+                    is com.google.gson.JsonSyntaxException -> context.getString(R.string.error_parsing_server_response_repo)
+                    else -> context.getString(R.string.error_token_refresh_exception_repo, e.message)
                 }
                 Result.Failure(Exception(errorMessage))
             }
         }
-
     fun logout(): Flow<Result<Unit>> = flow {
         try {
             Log.d("AuthRepository", "Initiating logout request")
-
-            // Получаем токен доступа
             val accessToken = sessionManager.getAccessToken()
             if (accessToken.isNullOrEmpty()) {
                 Log.w("AuthRepository", "No access token found, skipping server logout")
                 emit(Result.Success(Unit))
                 return@flow
             }
-
-            // Выполняем запрос logout с токеном
             val response = authService.logout("Bearer $accessToken")
             Log.d(
                 "AuthRepository",
                 "Logout response: code=${response.code()}, headers=${response.headers()}, raw=${response.raw()}"
             )
-
             when {
                 response.isSuccessful -> {
                     Log.d("AuthRepository", "Logout successful")
                     emit(Result.Success(Unit))
                 }
-                response.code() == 401 -> {
+                response.code() == 401 -> { // Если токен уже невалиден на сервере, считаем выход успешным локально
                     Log.e("AuthRepository", "Logout unauthorized (401): Invalid or expired token")
                     emit(Result.Success(Unit))
                 }
@@ -268,15 +263,15 @@ class AuthRepository(
                         "Logout error: code=${response.code()}, error=$errorBody, headers=${response.headers()}"
                     )
                     val errorMessage = if (errorBody.isBlank()) {
-                        "Ошибка сервера (${response.code()})"
+                        context.getString(R.string.error_server_with_code_repo, response.code())
                     } else {
                         try {
                             val gson = GsonBuilder().setLenient().create()
                             val error = gson.fromJson(errorBody, AuthError::class.java)
-                            error?.message ?: "Ошибка при выходе"
+                            error?.message ?: context.getString(R.string.error_logout_failed_repo)
                         } catch (e: Exception) {
                             Log.e("AuthRepository", "Error parsing response: ${e.message}, raw error body: $errorBody")
-                            "Ошибка при обработке ответа сервера"
+                            context.getString(R.string.error_parsing_server_response_repo)
                         }
                     }
                     emit(Result.Failure(Exception(errorMessage)))
@@ -288,28 +283,26 @@ class AuthRepository(
                 "Logout exception: ${e.message}, cause: ${e.cause}, stack trace: ${e.stackTrace.joinToString("\n")}"
             )
             val errorMessage = when (e) {
-                is java.net.UnknownHostException -> "Нет подключения к интернету"
-                is java.net.SocketTimeoutException -> "Превышено время ожидания ответа от сервера"
-                is com.google.gson.JsonSyntaxException -> "Ошибка при обработке ответа от сервера"
-                else -> "Ошибка при выходе: ${e.message}"
+                is java.net.UnknownHostException -> context.getString(R.string.error_no_internet_connection_repo)
+                is java.net.SocketTimeoutException -> context.getString(R.string.error_server_timeout_repo)
+                is com.google.gson.JsonSyntaxException -> context.getString(R.string.error_parsing_server_response_repo)
+                else -> context.getString(R.string.error_logout_exception_repo, e.message)
             }
             emit(Result.Failure(Exception(errorMessage)))
         }
     }
-
     suspend fun sendVerificationCode(email: String): Result<Unit> {
         return try {
             val response = authService.sendVerificationCode(email)
             if (response.isSuccessful) {
                 Result.Success(Unit)
             } else {
-                Result.Failure(Exception("Ошибка отправки кода"))
+                Result.Failure(Exception(context.getString(R.string.error_sending_code_failed_repo)))
             }
         } catch (e: Exception) {
-            Result.Failure(e)
+            Result.Failure(e) // Исключение будет обработано во ViewModel
         }
     }
-
     suspend fun verifyEmail(email: String, code: String): Result<Unit> {
         return try {
             val request = VerificationRequest(email, code)
@@ -317,18 +310,16 @@ class AuthRepository(
             if (response.isSuccessful) {
                 Result.Success(Unit)
             } else {
-                Result.Failure(Exception("Ошибка подтверждения почты"))
+                Result.Failure(Exception(context.getString(R.string.error_email_verification_failed_repo)))
             }
         } catch (e: Exception) {
             Result.Failure(e)
         }
     }
-
     fun getEmail(token: String): Flow<Result<EmailResponse>> = flow {
         try {
             val response = authService.getEmail(token)
             Log.d("AuthRepository", "Get email response: code=${response.code()}")
-
             when {
                 response.isSuccessful -> {
                     val body = response.body()
@@ -337,30 +328,30 @@ class AuthRepository(
                         emit(Result.Success(body))
                     } else {
                         Log.e("AuthRepository", "Get email successful but body is null")
-                        emit(Result.Failure(Exception("Не удалось получить email: пустой ответ")))
+                        emit(Result.Failure(Exception(context.getString(R.string.error_get_email_empty_body_repo))))
                     }
                 }
                 response.code() == 401 -> {
                     Log.e("AuthRepository", "Get email unauthorized (401): Invalid token")
-                    emit(Result.Failure(Exception("Требуется авторизация")))
+                    emit(Result.Failure(Exception(context.getString(R.string.error_auth_required_repo))))
                 }
                 response.code() == 404 -> {
                     Log.e("AuthRepository", "Get email not found (404)")
-                    emit(Result.Failure(Exception("Email не найден")))
+                    emit(Result.Failure(Exception(context.getString(R.string.error_email_not_found_repo))))
                 }
                 else -> {
                     val errorBody = response.errorBody()?.string() ?: ""
                     Log.e("AuthRepository", "Get email error: code=${response.code()}, error=$errorBody")
                     val errorMessage = if (errorBody.isBlank()) {
-                        "Ошибка сервера (${response.code()})"
+                        context.getString(R.string.error_server_with_code_repo, response.code())
                     } else {
                         try {
                             val gson = GsonBuilder().setLenient().create()
                             val error = gson.fromJson(errorBody, AuthError::class.java)
-                            error?.message ?: "Ошибка получения email"
+                            error?.message ?: context.getString(R.string.error_get_email_failed_repo)
                         } catch (e: Exception) {
                             Log.e("AuthRepository", "Error parsing response: ${e.message}")
-                            "Ошибка при обработке ответа сервера"
+                            context.getString(R.string.error_parsing_server_response_repo)
                         }
                     }
                     emit(Result.Failure(Exception(errorMessage)))
@@ -369,15 +360,14 @@ class AuthRepository(
         } catch (e: Exception) {
             Log.e("AuthRepository", "Get email exception: ${e.message}")
             val errorMessage = when (e) {
-                is java.net.UnknownHostException -> "Нет подключения к интернету"
-                is java.net.SocketTimeoutException -> "Превышено время ожидания ответа от сервера"
-                is com.google.gson.JsonSyntaxException -> "Ошибка при обработке ответа от сервера"
-                else -> "Ошибка при получении email: ${e.message}"
+                is java.net.UnknownHostException -> context.getString(R.string.error_no_internet_connection_repo)
+                is java.net.SocketTimeoutException -> context.getString(R.string.error_server_timeout_repo)
+                is com.google.gson.JsonSyntaxException -> context.getString(R.string.error_parsing_server_response_repo)
+                else -> context.getString(R.string.error_get_email_exception_repo, e.message)
             }
             emit(Result.Failure(Exception(errorMessage)))
         }
     }
-
     suspend fun resetPassword(email: String, code: String, newPassword: String): Result<Unit> {
         return try {
             val request = PasswordResetRequest(email, code, newPassword)
@@ -386,17 +376,17 @@ class AuthRepository(
                 Result.Success(Unit)
             } else {
                 val errorMessage = when (response.code()) {
-                    400 -> "Неверный код подтверждения"
-                    404 -> "Email не найден"
-                    else -> "Ошибка сброса пароля (${response.code()})"
+                    400 -> context.getString(R.string.error_invalid_confirmation_code_repo)
+                    404 -> context.getString(R.string.error_email_not_found_for_reset_repo)
+                    else -> context.getString(R.string.error_password_reset_failed_with_code_repo, response.code())
                 }
                 Result.Failure(Exception(errorMessage))
             }
         } catch (e: Exception) {
             val errorMessage = when (e) {
-                is java.net.UnknownHostException -> "Нет подключения к интернету"
-                is java.net.SocketTimeoutException -> "Превышено время ожидания ответа от сервера"
-                else -> "Ошибка при сбросе пароля: ${e.message}"
+                is java.net.UnknownHostException -> context.getString(R.string.error_no_internet_connection_repo)
+                is java.net.SocketTimeoutException -> context.getString(R.string.error_server_timeout_repo)
+                else -> context.getString(R.string.error_password_reset_exception_repo, e.message)
             }
             Result.Failure(Exception(errorMessage))
         }

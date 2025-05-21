@@ -4,8 +4,8 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
 import android.net.Uri
-import android.os.CountDownTimer
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.KeyEvent
@@ -28,34 +28,38 @@ import com.sosiso4kawo.zschoolapp.data.model.User
 import com.sosiso4kawo.zschoolapp.data.repository.UserRepository
 import com.sosiso4kawo.zschoolapp.databinding.FragmentEditProfileBinding
 import com.sosiso4kawo.zschoolapp.ui.auth.AuthViewModel
+import com.sosiso4kawo.zschoolapp.ui.auth.PasswordResetState
 import com.sosiso4kawo.zschoolapp.util.SessionManager
 import com.yalantis.ucrop.UCrop
+import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
-import java.io.File
-import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
+import java.io.File
 
 class EditProfileFragment : Fragment() {
-
     private var _binding: FragmentEditProfileBinding? = null
     private val binding get() = _binding!!
     private val userRepository: UserRepository by inject()
     private lateinit var sessionManager: SessionManager
     private var currentUser: User? = null
+    private val authViewModel: AuthViewModel by viewModel()
+    private var resetPasswordDialog: AlertDialog? = null
+    private var codeTimer: CountDownTimer? = null
 
-    // Для работы с reset password через AuthViewModel
-    private val authViewModel: AuthViewModel by inject()
+    companion object {
+        private const val CODE_TIMER_DURATION = 60000L
+        private const val CODE_TIMER_INTERVAL = 1000L
+    }
 
-    // Выбор изображения из галереи
+
     private val getContent = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
             startCrop(it)
         }
     }
-
-    // Получение результата из uCrop
     private val cropActivityResult = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.let { data ->
@@ -66,10 +70,9 @@ class EditProfileFragment : Fragment() {
                 }
             }
         } else {
-            Toast.makeText(requireContext(), "Ошибка обрезки изображения", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), getString(R.string.toast_crop_error), Toast.LENGTH_SHORT).show()
         }
     }
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -78,7 +81,7 @@ class EditProfileFragment : Fragment() {
         sessionManager = SessionManager(requireContext())
         binding.header.apply {
             setHeaderBackgroundColor(R.color.header_profile)
-            setTitle("Редактирование")
+            setTitle(getString(R.string.header_title_edit_profile))
             showBackButton(true)
             setOnBackClickListener { findNavController().navigateUp() }
         }
@@ -87,28 +90,52 @@ class EditProfileFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         binding.avatarImageView.setOnClickListener {
             getContent.launch("image/*")
         }
-
-        // Загружаем email пользователя и отображаем его в emailTextView
         authViewModel.loadEmail { email ->
-            binding.emailTextView.text = email.toString()
+            binding.emailTextView.text = email ?: getString(R.string.text_email_not_found)
         }
-
         binding.resetPasswordButton.setOnClickListener {
             val email = binding.emailTextView.text.toString()
-            if (email.isNotBlank() && email != "Email не найден") {
+            if (email.isNotBlank() && email != getString(R.string.text_email_not_found)) {
                 showResetPasswordDialog(email)
             } else {
-                Toast.makeText(requireContext(), "Email не найден", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), getString(R.string.toast_email_not_found_for_reset), Toast.LENGTH_SHORT).show()
             }
         }
-
         loadCurrentProfile()
         setupSaveButton()
+        observePasswordResetState()
     }
+
+    private fun observePasswordResetState() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                authViewModel.passwordResetState.collect { state ->
+                    when (state) {
+                        is PasswordResetState.Loading -> {
+                            // Можно показать индикатор в диалоге
+                        }
+                        is PasswordResetState.CodeSent -> {
+                            Toast.makeText(requireContext(), getString(R.string.toast_reset_code_sent), Toast.LENGTH_SHORT).show()
+                        }
+                        is PasswordResetState.Success -> {
+                            resetPasswordDialog?.dismiss()
+                            Toast.makeText(requireContext(), getString(R.string.toast_password_reset_successfully), Toast.LENGTH_SHORT).show()
+                        }
+                        is PasswordResetState.Error -> {
+                            Toast.makeText(requireContext(), getString(R.string.error_generic_with_message, state.message), Toast.LENGTH_SHORT).show()
+                        }
+                        PasswordResetState.Idle -> {
+                            // Начальное состояние или после сброса
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 
     private fun loadCurrentProfile() {
         viewLifecycleOwner.lifecycleScope.launch {
@@ -122,7 +149,7 @@ class EditProfileFragment : Fragment() {
                         is com.sosiso4kawo.zschoolapp.util.Result.Failure -> {
                             Toast.makeText(
                                 requireContext(),
-                                "Ошибка загрузки профиля: ${result.exception.message}",
+                                getString(R.string.error_loading_profile_with_message, result.exception.message),
                                 Toast.LENGTH_SHORT
                             ).show()
                         }
@@ -131,7 +158,6 @@ class EditProfileFragment : Fragment() {
             }
         }
     }
-
     private fun populateFields(user: User) {
         binding.apply {
             loginEditText.setText(user.login)
@@ -148,10 +174,8 @@ class EditProfileFragment : Fragment() {
             } else {
                 avatarImageView.setImageResource(R.drawable.placeholder_avatar)
             }
-            // Email будет загружен через authViewModel.loadEmail()
         }
     }
-
     private fun setupSaveButton() {
         binding.saveButton.setOnClickListener {
             val updateRequest = UpdateProfileRequest(
@@ -161,17 +185,16 @@ class EditProfileFragment : Fragment() {
                 second_name = binding.middleNameEditText.text.toString().takeIf { it.isNotBlank() },
                 avatar = null
             )
-
             viewLifecycleOwner.lifecycleScope.launch {
                 viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                     userRepository.updateProfile(updateRequest).collect { result ->
                         when (result) {
                             is com.sosiso4kawo.zschoolapp.util.Result.Success -> {
-                                Toast.makeText(requireContext(), "Профиль успешно обновлен", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(requireContext(), getString(R.string.toast_profile_updated_successfully), Toast.LENGTH_SHORT).show() // ИСПРАВЛЕНО
                                 findNavController().navigateUp()
                             }
                             is com.sosiso4kawo.zschoolapp.util.Result.Failure -> {
-                                Toast.makeText(requireContext(), "Ошибка обновления профиля: ${result.exception.message}", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(requireContext(), getString(R.string.error_updating_profile_with_message, result.exception.message), Toast.LENGTH_SHORT).show()
                             }
                         }
                     }
@@ -179,7 +202,6 @@ class EditProfileFragment : Fragment() {
             }
         }
     }
-
     private fun showResetPasswordDialog(email: String) {
         val dialogView = LayoutInflater.from(requireContext())
             .inflate(R.layout.dialog_reset_password, null)
@@ -188,11 +210,10 @@ class EditProfileFragment : Fragment() {
         val newPasswordInputLayout = dialogView.findViewById<TextInputLayout>(R.id.newPasswordInputLayout)
         val newPasswordEditText = dialogView.findViewById<TextInputEditText>(R.id.newPasswordEditText)
         val confirmPasswordEditText = dialogView.findViewById<TextInputEditText>(R.id.confirmPasswordEditText)
-        val sendCodeButton = dialogView.findViewById<MaterialButton>(R.id.sendCodeButton)
-        val resetPasswordButton = dialogView.findViewById<MaterialButton>(R.id.resetPasswordButton)
+        val sendCodeButton = dialogView.findViewById<MaterialButton>(R.id.sendCodeButton) // Предполагаем MaterialButton
+        val resetPasswordButton = dialogView.findViewById<MaterialButton>(R.id.resetPasswordButton) // Предполагаем MaterialButton
 
         resetPasswordButton.isEnabled = false
-
         codeEditText.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
                 resetPasswordButton.isEnabled = s?.length == 6
@@ -201,22 +222,22 @@ class EditProfileFragment : Fragment() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
 
-        val dialog = AlertDialog.Builder(requireContext())
-            .setTitle("Сброс пароля")
+        resetPasswordDialog = AlertDialog.Builder(requireContext())
+            .setTitle(getString(R.string.dialog_title_reset_password))
             .setView(dialogView)
-            .setCancelable(true) // Разрешаем закрытие диалога при нажатии вне его области
+            .setCancelable(true)
             .create()
 
-        // Добавляем слушатель для отмены диалога при нажатии вне его области
-        dialog.setOnCancelListener {
-            // Можно добавить всплывающее сообщение при отмене
-            Toast.makeText(requireContext(), "Сброс пароля отменен", Toast.LENGTH_SHORT).show()
+        resetPasswordDialog?.setOnCancelListener {
+            codeTimer?.cancel()
+            Toast.makeText(requireContext(), getString(R.string.toast_password_reset_cancelled), Toast.LENGTH_SHORT).show()
+            authViewModel.resetPasswordResetState()
         }
 
         sendCodeButton.setOnClickListener {
-            authViewModel.sendVerificationCode(email)
+            authViewModel.sendVerificationCode(email, isForReset = true)
             sendCodeButton.isEnabled = false
-            startCodeTimer(sendCodeButton)
+            startCodeTimer(sendCodeButton, getString(R.string.button_send_code_timed), getString(R.string.button_send_code))
         }
 
         resetPasswordButton.setOnClickListener {
@@ -225,63 +246,55 @@ class EditProfileFragment : Fragment() {
             val confirmPassword = confirmPasswordEditText.text.toString()
 
             if (code.isBlank()) {
-                codeInputLayout.error = "Введите код подтверждения"
+                codeInputLayout.error = getString(R.string.error_enter_confirmation_code)
                 return@setOnClickListener
             } else {
                 codeInputLayout.error = null
             }
 
             if (newPassword.isBlank()) {
-                newPasswordInputLayout.error = "Введите новый пароль"
+                newPasswordInputLayout.error = getString(R.string.error_enter_new_password)
                 return@setOnClickListener
             } else if (!isPasswordValid(newPassword)) {
-                newPasswordInputLayout.error = "Пароль должен содержать минимум 8 символов, одну заглавную букву, одну маленькую букву, одну цифру и один специальный символ"
+                newPasswordInputLayout.error = getString(R.string.error_password_requirements)
                 return@setOnClickListener
             } else {
                 newPasswordInputLayout.error = null
             }
 
             if (confirmPassword.isBlank()) {
-                newPasswordInputLayout.error = "Подтвердите пароль"
+                newPasswordInputLayout.error = getString(R.string.error_confirm_password)
                 return@setOnClickListener
             } else if (newPassword != confirmPassword) {
-                newPasswordInputLayout.error = "Пароли не совпадают"
+                newPasswordInputLayout.error = getString(R.string.error_passwords_do_not_match)
                 return@setOnClickListener
             } else {
                 newPasswordInputLayout.error = null
             }
-
-            authViewModel.resetPassword(email, code, newPassword) { success, message ->
-                if (success) {
-                    Toast.makeText(requireContext(), "Пароль успешно сброшен", Toast.LENGTH_SHORT).show()
-                    dialog.dismiss()
-                } else {
-                    Toast.makeText(requireContext(), "Ошибка: $message", Toast.LENGTH_SHORT).show()
-                }
-            }
+            authViewModel.resetPassword(email, code, newPassword)
         }
-
-        // Добавляем обработчик нажатия кнопки "назад"
-        dialog.setOnKeyListener { _, keyCode, event ->
+        resetPasswordDialog?.setOnKeyListener { _, keyCode, event ->
             if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
-                dialog.dismiss()
+                resetPasswordDialog?.dismiss()
                 return@setOnKeyListener true
             }
             false
         }
-
-        dialog.show()
+        resetPasswordDialog?.show()
     }
 
-    private fun startCodeTimer(sendCodeButton: MaterialButton) {
-        object : CountDownTimer(60000, 1000) {
+    // Убедитесь, что тип Button здесь соответствует тому, что используется в dialog_reset_password.xml (MaterialButton)
+    private fun startCodeTimer(button: MaterialButton, timedTextFormat: String, defaultText: String) {
+        codeTimer?.cancel()
+        button.isEnabled = false
+        codeTimer = object : CountDownTimer(CODE_TIMER_DURATION, CODE_TIMER_INTERVAL) {
             @SuppressLint("SetTextI18n")
             override fun onTick(millisUntilFinished: Long) {
-                sendCodeButton.text = "Отправить код (${millisUntilFinished / 1000}s)"
+                button.text = String.format(timedTextFormat, millisUntilFinished / 1000)
             }
             override fun onFinish() {
-                sendCodeButton.text = "Отправить код"
-                sendCodeButton.isEnabled = true
+                button.text = defaultText
+                button.isEnabled = true
             }
         }.start()
     }
@@ -296,11 +309,13 @@ class EditProfileFragment : Fragment() {
     }
 
     private fun startCrop(sourceUri: Uri) {
-        val destinationUri = Uri.fromFile(File(requireContext().cacheDir, "cropped_image.jpg"))
+        val destinationFileName = "cropped_image_${System.currentTimeMillis()}.jpg"
+        val destinationUri = Uri.fromFile(File(requireContext().cacheDir, destinationFileName))
         val options = UCrop.Options().apply {
             setCircleDimmedLayer(true)
             setShowCropFrame(false)
             setShowCropGrid(false)
+            setCompressionQuality(90)
         }
         val uCropInstance = UCrop.of(sourceUri, destinationUri)
             .withAspectRatio(1f, 1f)
@@ -308,26 +323,39 @@ class EditProfileFragment : Fragment() {
             .withOptions(options)
         cropActivityResult.launch(uCropInstance.getIntent(requireContext()))
     }
-
     private fun uploadCroppedAvatar(uri: Uri) {
-        val file = File(uri.path ?: return)
+        val filePath = uri.path ?: return
+        val file = File(filePath)
+        if (!file.exists()) {
+            Toast.makeText(requireContext(), getString(R.string.toast_error_file_not_found_for_upload), Toast.LENGTH_SHORT).show()
+            return
+        }
+
         val requestFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
         val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
-        val token = "Bearer " + (sessionManager.getAccessToken() ?: "")
+        val token = "Bearer " + (sessionManager.getAccessToken() ?: run {
+            Toast.makeText(requireContext(), getString(R.string.toast_error_auth_token_missing), Toast.LENGTH_SHORT).show()
+            return
+        })
 
         viewLifecycleOwner.lifecycleScope.launch {
-            val response = userRepository.uploadAvatar(token, body)
-            if (response.isSuccessful) {
-                Toast.makeText(requireContext(), "Аватар обновлен", Toast.LENGTH_SHORT).show()
-                loadCurrentProfile()
-            } else {
-                Toast.makeText(requireContext(), "Ошибка загрузки аватара", Toast.LENGTH_SHORT).show()
+            try {
+                val response = userRepository.uploadAvatar(token, body)
+                if (response.isSuccessful) {
+                    Toast.makeText(requireContext(), getString(R.string.toast_avatar_updated_successfully), Toast.LENGTH_SHORT).show()
+                    loadCurrentProfile()
+                } else {
+                    Toast.makeText(requireContext(), getString(R.string.toast_error_uploading_avatar_code, response.code()), Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), getString(R.string.toast_error_uploading_avatar_exception, e.message), Toast.LENGTH_SHORT).show()
             }
         }
     }
-
     override fun onDestroyView() {
         super.onDestroyView()
+        codeTimer?.cancel()
+        resetPasswordDialog?.dismiss()
         _binding = null
     }
 }

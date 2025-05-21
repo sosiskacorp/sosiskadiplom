@@ -1,10 +1,13 @@
 package com.sosiso4kawo.zschoolapp.ui.auth
 
+import android.app.Application // Для доступа к ресурсам
 import android.util.Log
 import android.util.Patterns
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel // Меняем ViewModel на AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.sosiso4kawo.zschoolapp.R // Импорт R для доступа к строкам
 import com.sosiso4kawo.zschoolapp.data.model.AuthResponse
+import com.sosiso4kawo.zschoolapp.data.model.EmailNotConfirmedException // Импорт кастомного исключения
 import com.sosiso4kawo.zschoolapp.data.repository.AuthRepository
 import com.sosiso4kawo.zschoolapp.util.Result
 import com.sosiso4kawo.zschoolapp.util.SessionManager
@@ -12,19 +15,26 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-// Расширение для нашего типа Result для удобного "разворачивания"
+// Вспомогательная функция fold остается такой же
 fun <T, R> Result<T>.fold(onSuccess: (T) -> R, onFailure: (Exception) -> R): R = when (this) {
     is Result.Success -> onSuccess(value)
     is Result.Failure -> onFailure(exception)
 }
 
 class AuthViewModel(
+    application: Application, // Добавляем Application
     private val repository: AuthRepository,
     private val sessionManager: SessionManager
-) : ViewModel() {
+) : AndroidViewModel(application) { // Наследуемся от AndroidViewModel
 
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Initial)
     val uiState: StateFlow<AuthUiState> = _uiState
+
+    private val _emailVerificationState = MutableStateFlow<EmailVerificationState>(EmailVerificationState.Idle)
+    val emailVerificationState: StateFlow<EmailVerificationState> = _emailVerificationState
+
+    private val _passwordResetState = MutableStateFlow<PasswordResetState>(PasswordResetState.Idle)
+    val passwordResetState: StateFlow<PasswordResetState> = _passwordResetState
 
     init {
         checkSession()
@@ -48,31 +58,36 @@ class AuthViewModel(
 
     fun login(login: String, password: String) {
         if (!Patterns.EMAIL_ADDRESS.matcher(login).matches()) {
-            _uiState.value = AuthUiState.Error("Неверный формат почты")
+            _uiState.value = AuthUiState.Error(getApplication<Application>().getString(R.string.error_invalid_email_format_vm))
             return
         }
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
-            // repository.login теперь возвращает Result<AuthResponse>
             val result = repository.login(login, password)
             _uiState.value = result.fold(
                 onSuccess = { AuthUiState.Success(it) },
-                onFailure = { AuthUiState.Error(it.message ?: "Неизвестная ошибка") }
+                onFailure = { exception ->
+                    if (exception is EmailNotConfirmedException) {
+                        AuthUiState.ErrorEmailNotConfirmed(login) // Передаем email
+                    } else {
+                        AuthUiState.Error(exception.message ?: getApplication<Application>().getString(R.string.error_unknown_vm))
+                    }
+                }
             )
         }
     }
 
     fun register(email: String, password: String) {
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            _uiState.value = AuthUiState.Error("Неверный формат почты")
+            _uiState.value = AuthUiState.Error(getApplication<Application>().getString(R.string.error_invalid_email_format_vm))
             return
         }
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
             val result = repository.register(email, password)
             _uiState.value = result.fold(
-                onSuccess = { AuthUiState.Success(it) },
-                onFailure = { AuthUiState.Error(it.message ?: "Неизвестная ошибка") }
+                onSuccess = { AuthUiState.Success(it) }, // После регистрации можно сразу считать Success или перенаправлять на верификацию
+                onFailure = { AuthUiState.Error(it.message ?: getApplication<Application>().getString(R.string.error_unknown_vm)) }
             )
         }
     }
@@ -80,43 +95,78 @@ class AuthViewModel(
     fun logout() {
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
-            // Функция logout возвращает Flow<Result<Unit>>
             repository.logout().collect { result ->
                 _uiState.value = result.fold(
                     onSuccess = {
                         sessionManager.clearSession()
                         AuthUiState.LoggedOut
                     },
-                    onFailure = { AuthUiState.Error(it.message ?: "Ошибка при выходе") }
+                    onFailure = { AuthUiState.Error(it.message ?: getApplication<Application>().getString(R.string.error_logout_failed_vm)) }
                 )
             }
         }
     }
 
-    fun sendVerificationCode(email: String) {
+    fun sendVerificationCode(email: String, isForReset: Boolean = false) {
         viewModelScope.launch {
-            repository.sendVerificationCode(email)
+            if (isForReset) {
+                _passwordResetState.value = PasswordResetState.Loading
+            } else {
+                _emailVerificationState.value = EmailVerificationState.Loading
+            }
+            val result = repository.sendVerificationCode(email)
+            result.fold(
+                onSuccess = {
+                    if (isForReset) {
+                        _passwordResetState.value = PasswordResetState.CodeSent
+                    } else {
+                        _emailVerificationState.value = EmailVerificationState.CodeSent
+                    }
+                },
+                onFailure = {
+                    val errorMessage = it.message ?: getApplication<Application>().getString(R.string.error_sending_code_vm)
+                    if (isForReset) {
+                        _passwordResetState.value = PasswordResetState.Error(errorMessage)
+                    } else {
+                        _emailVerificationState.value = EmailVerificationState.Error(errorMessage)
+                    }
+                }
+            )
         }
     }
 
-    fun verifyEmail(email: String, code: String, callback: (Boolean, String) -> Unit) {
+    fun verifyEmail(email: String, code: String) {
         viewModelScope.launch {
+            _emailVerificationState.value = EmailVerificationState.Loading
             val result = repository.verifyEmail(email, code)
             result.fold(
-                onSuccess = { callback(true, "") },
-                onFailure = { callback(false, it.message ?: "Неизвестная ошибка") }
+                onSuccess = { _emailVerificationState.value = EmailVerificationState.Success },
+                onFailure = {
+                    _emailVerificationState.value = EmailVerificationState.Error(it.message ?: getApplication<Application>().getString(R.string.error_verifying_email_vm))
+                }
             )
         }
     }
 
-    fun resetPassword(email: String, code: String, newPassword: String, callback: (Boolean, String) -> Unit) {
+    fun resetPassword(email: String, code: String, newPassword: String) {
         viewModelScope.launch {
+            _passwordResetState.value = PasswordResetState.Loading
             val result = repository.resetPassword(email, code, newPassword)
             result.fold(
-                onSuccess = { callback(true, "") },
-                onFailure = { callback(false, it.message ?: "Неизвестная ошибка") }
+                onSuccess = { _passwordResetState.value = PasswordResetState.Success },
+                onFailure = {
+                    _passwordResetState.value = PasswordResetState.Error(it.message ?: getApplication<Application>().getString(R.string.error_resetting_password_vm))
+                }
             )
         }
+    }
+
+    fun resetEmailVerificationState() {
+        _emailVerificationState.value = EmailVerificationState.Idle
+    }
+
+    fun resetPasswordResetState() {
+        _passwordResetState.value = PasswordResetState.Idle
     }
 
     fun loadEmail(callback: (String?) -> Unit) {
@@ -126,8 +176,8 @@ class AuthViewModel(
                 result.fold(
                     onSuccess = { callback(it.email) },
                     onFailure = {
-                        Log.e("AuthViewModel", "Failed to load email: ${it.message}")
-                        callback(null)
+                        Log.e("AuthViewModel", getApplication<Application>().getString(R.string.log_failed_to_load_email, it.message))
+                        callback(null) // Передаем null в колбэк при ошибке
                     }
                 )
             }

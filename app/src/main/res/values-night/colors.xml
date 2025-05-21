@@ -41,4 +41,5 @@
     <!-- Добавить в конец файла -->
     <color name="dark_gray">#616161</color>
     <color name="light_gray">#B0B0B0</color>
+    <color name="currentUserHighlight">#80F97316</color>
 </resources>
