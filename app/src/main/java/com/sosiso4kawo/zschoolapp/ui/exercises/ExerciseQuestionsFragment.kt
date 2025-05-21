@@ -269,7 +269,7 @@ class ExerciseQuestionsFragment : Fragment() {
                 val response = exercisesService.getExerciseQuestions(exerciseUuid!!)
                 if (response.isSuccessful) {
                     response.body()?.let { questionList ->
-                        questions = questionList.sortedBy { it.order }
+                        questions = questionList.shuffled()
                         if (questions.isNotEmpty()) {
                             currentQuestionIndex = 0
                             displayCurrentQuestion()
